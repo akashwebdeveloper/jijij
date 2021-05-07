@@ -1,0 +1,301 @@
+<div class="wrapper">
+    <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <h1>Update Form</h1>
+                    </div>
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="/admin">Home</a></li>
+                            <li class="breadcrumb-item">Update banner</li>
+                            <!-- <% if(page_name === 'form') { %>
+                            <% } %> -->
+                        </ol>
+                    </div>
+                </div>
+            </div><!-- /.container-fluid -->
+        </section>
+
+        <!-- Main content -->
+        <section class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-8">
+                        <!-- general form elements -->
+                        <div class="card card-primary">
+                            <div class="card-header">
+                                <h3 class="card-title"></h3>
+                            </div>
+                            <!-- /.card-header -->
+                            <!-- form start -->
+                            <form method="post" enctype="multipart/form-data" action="/admin/updatebazar">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <div class="form-group">
+                                                <input type="hidden" class="" name="id" value="<%= item._id %>" >
+                                                <label for="">CATEGORY</label>
+                                                <select class="form-control" name="category" id="">
+                                                    <!-- <option value="">All Offers</option> -->
+                                                    <option value="" disabled selected>Select CATEGORY</option>
+                                                    <option value="Free" <%=  item.category == 'Free' ? 'selected' : ''%>>Free</option>
+                                                    <option value="App Exclusive" <%=  item.category == 'App Exclusive' ? 'selected' : ''%>>App Exclusive</option>
+                                                    <option value="Accessories" <%=  item.category == 'Accessories' ? 'selected' : ''%>>Accessories</option>
+                                                    <option value="Apparel" <%=  item.category == 'Apparel' ? 'selected' : ''%>>Apparel</option>
+                                                    <option value="Electronics" <%=  item.category == 'Electronics' ? 'selected' : ''%>>Electronics</option>
+                                                    <option value="Food & Beverage" <%=  item.category == 'Food & Beverage' ? 'selected' : ''%>>Food & Beverage</option>
+                                                    <option value="Footwear" <%=  item.category == 'Footwear' ? 'selected' : ''%>>Footwear</option>
+                                                    <option value="Health & Wellness" <%=  item.category == 'Health & Wellness' ? 'selected' : ''%>>Health & Wellness</option>
+                                                    <option value="Jewellery" <%=  item.category == 'Jewellery' ? 'selected' : ''%>>Jewellery</option>
+                                                    <option value="Personal Care" <%=  item.category == 'Personal Care' ? 'selected' : ''%>>Personal Care</option>
+                                                    <option value="Sleep Solution" <%=  item.category == 'Sleep Solution' ? 'selected' : ''%>>Sleep Solution</option>
+                                                    <option value="Subscription" <%=  item.category == 'Subscription' ? 'selected' : ''%>>Subscription</option>
+                                                    <option value="Others" <%=  item.category == 'Others' ? 'selected' : ''%>>Others</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-12">
+                                            <h3>Banner</h3>
+                                            <hr>
+                                        </div>
+                                        <hr>
+                                        <div class="col-lg-12">
+                                            <div class="form-group">
+                                                <label for="">Company Name</label>
+                                                <input type="text" name="companyname" class="form-control" id=""
+                                                    placeholder="Enter Company Name" value="<%= item.companyname %>">
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-12">
+                                            <div class="form-group">
+                                                <label for="">Discount</label>
+                                                <input type="text" name="discount" class="form-control" id=""
+                                                    placeholder="Enter Discount text" value="<%= item.discount %>">
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-12">
+                                            <div class="form-group">
+                                              <label for="">Dicount Banner</label>
+                                                <input type="file" name="disscountbanner" class="form-control" id="" value="<%= item.disscountbanner %>">
+                                            </div>
+                                          </div>
+                                        <div class="col-lg-2">
+                                            <div class="form-group">
+                                                <div class="input-group">
+                                                    <div class="input-group-append">
+                                                        <% if(item) { 
+                                                            var db = item.disscountbanner.substr(('http://3.140.194.252').length, item.disscountbanner.length)
+                                                            %>
+                                                            <img src="/../<%= db %>" width="70px" height="70px;">
+                                                            <% } %>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-12">
+                                            <div class="form-group">
+                                                <label for="">Item Type</label>
+                                                <input type="text" name="itemtype" class="form-control" id=""
+                                                    placeholder="Enter Item Name" value="<%= item.itemtype %>">
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-12">
+                                            <hr>
+                                            <h3>Advertisment</h3>
+                                            <hr>
+                                        </div>
+                                        <div class="col-lg-12">
+                                            <div class="form-group">
+                                              <label for="">Product Photo</label>
+                                                <input type="file" name="productphoto" class="form-control" id="" multiple>
+                                            </div>
+                                          </div>
+                                          <% item.fullview.productphoto.forEach((photo)=> { %>
+                                          <div class="col-lg-2">
+                                            <div class="form-group">
+                                                <div class="input-group">
+                                                    <div class="input-group-append">
+                                                            <% if(item) { 
+                                                                var pp = photo.substr(('http://3.140.194.252').length, photo.length)
+                                                                %>
+                                                                <img src="/../<%= pp %>" width="70px" height="70px;">
+                                                                <% } %>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <% }) %>
+                                        <div class="col-lg-12">
+                                            <div class="form-group">
+                                                <label for="">Company Website</label>
+                                                <input type="text" name="website" class="form-control" id=""
+                                                    placeholder="Enter Company Website" value="<%= item.fullview.website %>">
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-12">
+                                            <div class="form-group">
+                                                <label for="">Discount Title</label>
+                                                <input type="text" name="discounttitle" class="form-control" id="" placeholder="Enter Title" value="<%= item.fullview.discounttitle %>">
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-12">
+                                            <div class="form-group">
+                                                <label for="">Description</label>
+                                                <textarea class="form-control" name="discription" placeholder="Place some text here" id=""><%= item.fullview.discription %></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-12">
+                                            <div class="form-group">
+                                                <label for="">Points</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-12">
+                                            <div class="form-group">
+                                                <label for="">A</label>
+                                                <input type="text" name="pa" class="form-control" id=""
+                                                    placeholder="Enter Points" value="<%= item.fullview.point[0] %>">
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-12">
+                                            <div class="form-group">
+                                                <label for="">B</label>
+                                                <input type="text" name="pb" class="form-control" id=""
+                                                    placeholder="Enter Points" value="<%= item.fullview.point[1] %>">
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-12">
+                                            <div class="form-group">
+                                                <label for="">C</label>
+                                                <input type="text" name="pc" class="form-control" id=""
+                                                    placeholder="Enter Points"value="<%= item.fullview.point[2] %>">
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-12">
+                                            <div class="form-group">
+                                                <label for="">D</label>
+                                                <input type="text" name="pd" class="form-control" id=""
+                                                    placeholder="Enter Points"value="<%= item.fullview.point[3] %>">
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-12">
+                                            <div class="form-group">
+                                                <label>Date</label>
+                                                <div class="form-group">
+                                                    <input type="date" name="ed" class="form-control" id=""value="<%= item.fullview.point[4] %>">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-12">
+                                            <hr>
+                                            <h3>Details</h3>
+                                            <hr>
+                                        </div>
+                                        <div class="col-lg-12">
+                                            <div class="form-group">
+                                              <label for="">Photo</label>
+                                                <input type="file" class="form-control" id="" name="photos" multiple>
+                                            </div>
+                                          </div>
+                                          <% item.details.photos.forEach((photo)=> { %>
+
+                                            <div class="col-lg-2">
+                                                <div class="form-group">
+                                                    <div class="input-group">
+                                                        <div class="input-group-append">
+                                                            <% if(item) { 
+                                                                var p = photo.substr(('http://3.140.194.252').length, photo.length)
+                                                                %>
+                                                                <img src="/../<%= p %>" width="70px" height="70px;">
+                                                                <% } %>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <% }) %>
+                                        <div class="col-lg-12">
+                                            <div class="form-group">
+                                                <label for="">About</label>
+                                                <textarea class="form-control" name="about" placeholder="Place some text here" id="" ><%= item.details.about %></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-12">
+                                            <div class="form-group">
+                                            <label for="">Notes</label>
+                                            <div class="wrapper3">
+                                              <div class="input-box">
+                                                  <div class="row">
+                                                  <div class="col-lg-10">
+                                                    <% item.details.notes.forEach((note)=> { %>
+                                                        <input type="text" class="form-control mb-2" name="notes" value="<%= note %>">
+                                                        
+                                                        <% }) %>
+                                                </div>
+                                                <div class="col-lg-2">
+                                                <a class="add-btn3" alt="Add" title="Add"><i class="fa fa-plus mt-2"></i></a>
+                                                </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            </div>
+                                          </div>
+                                          <div class="col-lg-12">
+                                            <div class="form-group">
+                                            <label for="">Instruction</label>
+                                            <div class="wrapper1">
+                                              <div class="input-box">
+                                                  <div class="row">
+                                                  <div class="col-lg-10">
+                                                    <% item.details.instruction.forEach((instruct)=> { %>
+                                                        <input type="text" class="form-control mb-2" name="instruction" value="<%= instruct %>">
+                                                        <% }) %>
+                                                </div>
+                                                <div class="col-lg-2">
+                                                <a class="add-btn1" alt="Add" title="Add"><i class="fa fa-plus mt-2"></i></a>
+                                                </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            </div>
+                                          </div>
+                                          <div class="col-lg-12">
+                                            <div class="form-group">
+                                            <label for="">Terms & Condition</label>
+                                            <div class="wrapper2">
+                                              <div class="input-box">
+                                                  <div class="row">
+                                                  <div class="col-lg-10">
+                                                    <% item.details.tc.forEach((term)=> { %>
+                                                        <input type="text" class="form-control mb-2" name="tc" value="<%= term %>"">
+                                                        <% }) %>
+                                                </div>
+                                                <div class="col-lg-2">
+                                                <a class="add-btn2" alt="Add" title="Add"><i class="fa fa-plus mt-2"></i></a>
+                                                </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            </div>
+                                          </div>
+                                        <div class="col-lg-12">
+                                            <div class="form-group">
+                                            <label for="">Offer Price</label>
+                                            <input type="text" name="offerprice" class="form-control" id="" placeholder="Enter Title" value="<%= item.details.offerprice %>">
+                                            </div>
+                                          </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Submit</button>
+                                    <!-- /.card-body -->
+                                    <div class="card-footer">
+
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>

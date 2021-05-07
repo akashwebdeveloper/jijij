@@ -1,0 +1,131 @@
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+  <!-- Content Header (Page header) -->
+  <section class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1>Banner Table</h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="/admin">Home</a></li>
+            <li class="breadcrumb-item active">Table</li>
+            <li class="breadcrumb-item active">Banner Table</li>
+          </ol>
+        </div>
+      </div>
+    </div><!-- /.container-fluid -->
+  </section>
+
+  <!-- Main content -->
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12">
+          <input class="form-control mb-1" type="text" id="myInput" onkeyup="filterTowns()" placeholder="Search: Enter Company Name">
+          <div class="card">
+            <div class="card-body">
+              <table class="table table-bordered table-hover sortable" id="myTable">
+                <thead>
+                  <tr>
+                    <th>Sr no</th>
+                    <th>Company Name</th>
+                    <th>Item Type</th>
+                    <th>Discount</th>
+                    <th>Created Date</th>
+                    <th>Expiry Date</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% data.forEach((item,index)=> {
+                    let day = new Date(item.createdAt).getDate();
+                    let month = new Date(item.createdAt).getMonth()+1;
+                    let year = new Date(item.createdAt).getFullYear();
+
+                    var date = (year+"-"+month+"-"+day)
+                    %>
+                    <tr>
+                      <td>
+                        <%= (perpage * (current-1)) + index + 1  %>
+                      </td>
+                      <td>
+                        <%= item.companyname %>
+                      </td>
+                      <td>
+                        <%= item.itemtype %>
+                      </td>
+                      <td>
+                        <%= item.discount %>
+                      </td>
+                      <td>
+                        <%= date %>
+                      </td>
+                      <td>
+                        <%= item.fullview.point[4] %>
+                      </td>
+                      <td><a href="/admin/updatebazar/<%= item._id %>" class="btn btn-success" title="Edit" alt="Edit"><i
+                            class="fa fa-edit"></i></a>&nbsp;
+                            <a href="/admin/deletebazar/<%= item._id %>" class="btn btn-danger" title="Delete"
+                          alt="Delete"><i class="fa fa-trash"></i></a></td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <th>Sr no</th>
+                    <th>Company Name</th>
+                    <th>Item Type</th>
+                    <th>Discount</th>
+                    <th>Created Date</th>
+                    <th>Expiry Date</th>
+                    <th>Action</th>
+                  </tr>
+                </tfoot>
+              </table>
+              <div class="mt-3">
+                <div class="text-center">
+                  <% if (pages > 0) { %>
+                  <ul class="pagination">
+                    <% if (current == 1) { %>
+                      <li class="page-item disabled"><a class="page-link">First</a></li>
+                  <% } else { %>
+                      <li><a class="page-link" href="/admin/bazartable/?page=1">First</a></li>
+                  <% } %>
+                  <% var i = (Number(current) > 5 ? Number(current) - 4 : 1) %>
+                  <% if (i !== 1) { %>
+                      <li class="page-item disabled"><a>...</a></li>
+                  <% } %>
+                  <% for (; i <= (Number(current) + 4) && i <= pages; i++) { %>
+                      <% if (i == current) { %>
+                          <li class="page-item active"><a class="page-link"><%= i %></a></li>
+                      <% } else { %>
+                          <li><a class="page-link" href="/admin/bazartable/?page=<%= i %>"><%= i %></a></li>
+                      <% } %>
+                      <% if (i == Number(current) + 4 && i < pages) { %>
+                          <li class="page-item disabled"><a class="page-link">...</a></li>
+                      <% } %>
+                  <% } %>
+                  <% if (current == pages) { %>
+                      <li class="page-item disabled"><a class="page-link">Last</a></li>
+                  <% } else { %>
+                      <li><a class="page-link" href="/admin/bazartable/?page=<%= pages %>">Last</a></li>
+                  <% } %>
+                  </ul>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+            <!-- /.card-body -->
+          </div>
+        </div>
+        <!-- /.col -->
+      </div>
+      <!-- /.row -->
+    </div>
+    <!-- /.container-fluid -->
+  </section>
+  <!-- /.content -->
+</div>
+<!-- /.content-wrapper -->

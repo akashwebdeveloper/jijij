@@ -1,0 +1,183 @@
+<section class="content">
+	<div class="container-fluid">
+		<div class="block-header">
+			<h2>CRICKET FANTASY</h2>
+		</div>
+		<!-- Create Contest Form -->
+		<div class="row clearfix">
+			<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+				<div class="card">
+					<div class="header">
+						<h2>
+							CREATE CONTEST
+							<small>Taken from <a href="https://github.com/mjolnic/bootstrap-colorpicker/"
+									target="_blank">github.com/mjolnic/bootstrap-colorpicker</a></small>
+						</h2>
+						<ul class="header-dropdown m-r--5">
+							<li class="dropdown">
+								<a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown"
+									role="button" aria-haspopup="true" aria-expanded="false">
+									<i class="material-icons">more_vert</i>
+								</a>
+								<ul class="dropdown-menu pull-right">
+									<li><a href="javascript:void(0);">Action</a></li>
+									<li><a href="javascript:void(0);">Another action</a></li>
+									<li><a href="contest_table">Check contest list</a></li>
+								</ul>
+							</li>
+						</ul>
+					</div>
+					<form method="post" action="/admin/create_contest">
+						<div class="body">
+							<div class="row clearfix">
+								<div class="col-md-3">
+									<b>Prize Pool (Rupay)</b>
+									<div class="input-group">
+										<span class="input-group-addon mb-1">
+											<h4 class="fs-4">₹</h4>
+										</span>
+										<div class="form-line">
+											<input type="number" name="prize_pool" class="form-control"
+												placeholder="Ex: 99,99 ₹">
+										</div>
+									</div>
+								</div>
+								<div class="col-md-3">
+									<b>Entry Fee (Rupay)</b>
+									<div class="input-group">
+										<span class="input-group-addon mb-1">
+											<h4 class="fs-4">₹</h4>
+										</span>
+										<div class="form-line">
+											<input type="number" name="entry_fee" class="form-control"
+												placeholder="Ex: 99,99 ₹">
+										</div>
+									</div>
+								</div>
+								<div class="col-md-3">
+									<b>Spot (Person)</b>
+									<div class="input-group">
+										<span class="input-group-addon mb-1">
+											<i class="material-icons">person</i>
+										</span>
+										<div class="form-line">
+											<input type="number" name="spot" class="form-control" placeholder="Ex: 10">
+										</div>
+									</div>
+								</div>
+								<div class="col-md-3">
+									<b>Entry Limit (team/person)</b>
+									<div class="input-group">
+										<span class="input-group-addon mb-1">
+											<i class="material-icons">group</i>
+										</span>
+										<div class="form-line">
+											<input type="number" name="entry_limit" class="form-control"
+												placeholder="Ex: 2">
+										</div>
+									</div>
+								</div>
+							</div>
+
+
+							<div class="row clearfix">
+								<h4 style="margin-left: 1%;">Winner</h4>
+								<div class="wrapper">
+									<div class="col-md-3">
+										<b>From</b>
+										<div class="input-group">
+											<span class="input-group-addon mb-1">
+												<i class="material-icons">person_pin</i>
+											</span>
+											<div class="form-line">
+												<input type="number" name="from" class="form-control"
+													placeholder="Ex: 2" required>
+											</div>
+										</div>
+									</div>
+									<div class="col-md-3 col-md-offset-1">
+										<b>To</b>
+										<div class="input-group">
+											<span class="input-group-addon mb-1">
+												<i class="material-icons">person_pin</i>
+											</span>
+											<div class="form-line">
+												<input type="number" name="to" class="form-control" placeholder="Ex: 2" required>
+											</div>
+										</div>
+									</div>
+									<div class="col-md-3 col-md-offset-1">
+										<b>Ammount</b>
+										<div class="input-group">
+											<span class="input-group-addon mb-1">
+												<h4 class="fs-4">₹</h4>
+											</span>
+											<div class="form-line">
+												<input type="number" name="ammount" class="form-control"
+													placeholder="Ex: 2" required>
+											</div>
+										</div>
+									</div>
+									<div class="col-md-1">
+										<div class="input-group">
+											<a class="add-btn" alt="Add" style="cursor: pointer;" title="Add"><i
+													class="material-icons">add</i></a>
+										</div>
+									</div>
+								</div>
+							</div>
+							<button type="submit" class="btn btn-info waves-effect ">
+								<i class="material-icons">library_add</i>
+								<span>ADD CONTEST</span>
+							</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+
+<!-- Jquery Core Js -->
+<script src="/plugins/jquery/jquery.min.js"></script>
+
+<!-- Bootstrap Core Js -->
+<script src="/plugins/bootstrap/js/bootstrap.js"></script>
+
+<!-- Select Plugin Js -->
+<script src="/plugins/bootstrap-select/js/bootstrap-select.js"></script>
+
+<!-- Slimscroll Plugin Js -->
+<script src="/plugins/jquery-slimscroll/jquery.slimscroll.js"></script>
+
+<!-- Bootstrap Colorpicker Js -->
+<script src="/plugins/bootstrap-colorpicker/js/bootstrap-colorpicker.js"></script>
+
+<!-- Dropzone Plugin Js -->
+<script src="/plugins/dropzone/dropzone.js"></script>
+
+<!-- Input Mask Plugin Js -->
+<script src="/plugins/jquery-inputmask/jquery.inputmask.bundle.js"></script>
+
+<!-- Multi Select Plugin Js -->
+<script src="/plugins/multi-select/js/jquery.multi-select.js"></script>
+
+<!-- Jquery Spinner Plugin Js -->
+<script src="/plugins/jquery-spinner/js/jquery.spinner.js"></script>
+
+<!-- Bootstrap Tags Input Plugin Js -->
+<script src="/plugins/bootstrap-tagsinput/bootstrap-tagsinput.js"></script>
+
+<!-- noUISlider Plugin Js -->
+<script src="/plugins/nouislider/nouislider.js"></script>
+
+<!-- Waves Effect Plugin Js -->
+<script src="/plugins/node-waves/waves.js"></script>
+
+<!-- Custom Js -->
+<script src="/js/admin.js"></script>
+<script src="/js/pages/forms/advanced-form-elements.js"></script>
+
+<!-- Demo Js -->
+<script src="/js/demo.js"></script>
