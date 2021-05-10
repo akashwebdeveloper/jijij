@@ -39,7 +39,7 @@ const schedule = require('node-schedule');
 const { json } = require('body-parser');
 const { response } = require('express');
 schedule.scheduleJob('0 0 0 * * *', function () {
-    request(options, function (error, response) {
+    request(authToken, function (error, response) {
         if (error) throw new Error(error)
         // console.log(response.body)
         if (response.body.status_code === 200) {
@@ -72,7 +72,7 @@ module.exports = {
     Squad: (req, res) => {
         const { match_key } = req.body
 
-        Admin.findOne({ username: 'mpl' }, ['auth_token'], (err, data) => {
+        Admin.findOne({ username: 'mpl' }, ['auth_token', 'players'], (err, data) => {
             if (err) throw err;
             ACCESS_TOKEN = data.auth_token
 
@@ -90,7 +90,8 @@ module.exports = {
                         bat: [],
                         ar: [],
                         bowl: [],
-                    }
+                    },
+                    players = []
 
                 const matchStart = moment(teamCards.start_date.iso)
                 const days = matchStart.diff(moment(), 'days')
@@ -110,7 +111,17 @@ module.exports = {
                 // * This API for getting All details Player name, player point, player credit
                 options.url = host + `/rest/v3/fantasy-match-credits/${match_key}/?access_token=${ACCESS_TOKEN}`
                 request(options, function (error, matchFullData) {
+
                     if (error) throw new Error(error)
+                    if (matchFullData.body.data == null) {
+                        return res.status(200).json({
+                            success: false,
+                            message: matchFullData.body.status_msg,
+                            remaining: null,
+                            PlayerList: matchFullData.body.data
+                        })
+                    }
+                    
                     const pointCredit = matchFullData.body.data.fantasy_points;
                     const teamInfo = matchFullData.body.data.teams;
                     const playerInfo = matchFullData.body.data.players;
@@ -120,8 +131,14 @@ module.exports = {
                         teamPlayerList.forEach(playerData => {
                             let eachPlayer = playerInfo[playerData.player]
                             let eachPlayerRole = playerInfo[playerData.player].seasonal_role
-                            
+
                             var pushObj = {};
+                            var pushTeamObj = {};
+                            pushTeamObj.playerId = playerData.player
+                            pushTeamObj.playerName = eachPlayer.name
+                            pushTeamObj.picUpload = false
+                            pushTeamObj.country = eachPlayer.nationality
+                            players.push(pushTeamObj)
                             if (eachPlayerRole === "keeper") {
 
                                 pushObj.playerId = playerData.player
@@ -168,11 +185,17 @@ module.exports = {
 
                     PlayerDetails(pointCredit)
 
-                    return res.status(200).json({
-                        success: true,
-                        message: "Upcoming Match data Available",
-                        remaining: time,
-                        PlayerList
+                    var newPlayers = players.filter(entry1 => !data.players.some(entry2 => entry1.playerId === entry2.playerId));
+
+                    Admin.updateOne({ username: 'mpl' }, { $push: { players: newPlayers } }, (err) => {
+                        if (err) throw err;
+
+                        return res.status(200).json({
+                            success: true,
+                            message: "Upcoming Match data Available",
+                            remaining: time,
+                            PlayerList
+                        })
                     })
                 })
             });

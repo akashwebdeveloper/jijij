@@ -1,3 +1,4 @@
+const Admin = require('../../models/admin');
 const { mapReduce } = require('../../models/contest');
 const Contest = require('../../models/contest')
 const Subcontest = require('../../models/sub_contest')
@@ -51,5 +52,29 @@ module.exports = {
             if (err) throw err;
             return res.render('contestTable', {contests : contests})
         })
+    },
+    teamImage: (req, res) => {
+        Admin.find({},(err, admin)=>{
+            if (err) throw err;
+            return res.render('teamImage', {admin : admin[0]})
+        })
+    },
+    playerImage: (req, res) => {
+        Admin.find({},['player'],(err, admin)=>{
+            if (err) throw err;
+            return res.render('playerImage', {admin : admin[0]})
+        })
+    },
+    picUpload: (req, res) => {
+        const { id, cat } = req.query
+        
+            return res.render('uploadImage', {id, cat})
+        
+    },
+    postPicUpload: (req, res) => {
+        const { id, cat, file } = req.query
+
+            return res.render('uploadImage', {id, cat})
+        
     },
 }
