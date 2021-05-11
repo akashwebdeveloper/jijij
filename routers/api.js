@@ -1,9 +1,9 @@
 const router = require('express').Router();
-const { signup, phone, verify, resendotp } = require('../controller/auth/phoneController')
+const { signup } = require('../controller/auth/phoneController')
 
 // const { oneUser, multiUser } = require('../controller/notify')
 // const { getalldata, getdata, update, emailverification} = require('../controller/users/users')
-const { getdata} = require('../controller/users/users')
+const { getdata, update} = require('../controller/users/users')
 // const { follow, unfollow } = require('../controller/users/followController')
 const { updatephoto, upload } = require('../controller/photos/profilephoto')
 const { testing, Squad, upcoming } = require('../controller/matches/matchAPI')   
@@ -13,10 +13,6 @@ const { openContestList, createTeam } = require('../controller/matches/contest')
 // const { like, unlike } = require('../controller/bazar/likeController')
 // const { productfullview } = require('../controller/bazar/fullviewController')
 
-// Phone OTP verification
-router.get('/phone/', phone)
-router.get('/verify/', verify)
-router.get('/resendotp/', resendotp)
 
 // Insert New User into database
 router.post('/signup', signup)
@@ -31,7 +27,7 @@ router.post('/getinfo', getdata)
 
 
 // // Update user data
-// router.post('/updateprofile', update)
+router.post('/updateprofile', update)
 router.post('/updatephoto', upload.single('photos'), updatephoto)
 
 // // just for testing
