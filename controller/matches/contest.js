@@ -1,8 +1,9 @@
 require('dotenv').config()
 const Contest = require('../../models/contest')
+const User = require('../../models/user')
 const Subcontest = require('../../models//sub_contest')
+const { v4: uuidv4 } = require('uuid');
 var ACCESS_TOKEN = '';
-
 
 
 module.exports = {
@@ -32,7 +33,7 @@ module.exports = {
             });
             return res.status(200).json({
                 success: true,
-                message: "Upcoming Match data Available",
+                message: "Upcoming Match Contest Available",
                 list: contestList
             })
         }
@@ -82,5 +83,65 @@ module.exports = {
                 }
             })
         })
+    },
+    createTeam: (req, res) => {
+        const { match_key, player_id, role, captain, vc_captain, user_id } = req.body
+        PlayerList = {
+            teamId: uuidv4(),
+            wk: [],
+            bat: [],
+            ar: [],
+            bowl: [],
+            captain,
+            vc_captain
+        }
+        const finalObject = {}
+
+        role.forEach((eachPlayerRole, index) => {
+            const pushObj = {};
+
+            if (eachPlayerRole === "wk") {
+
+                PlayerList.wk.push(player_id[index])
+            } else if (eachPlayerRole === "bat") {
+
+                PlayerList.bat.push(player_id[index])
+            } else if (eachPlayerRole === "ar") {
+
+                PlayerList.ar.push(player_id[index])
+            } else {
+                PlayerList.bowl.push(player_id[index])
+            }
+        });
+
+        finalObject.match_key = match_key
+        finalObject.data = [PlayerList]
+
+        User.findById(user_id, ['created_teams'], (err,result)=>{
+            const found = result.created_teams.some(el => el.match_key === match_key);
+            if (found) {
+                User.findOneAndUpdate({_id:user_id, "created_teams.match_key" : match_key}, {$push : { "created_teams.$.data":  PlayerList} }, (err,result1)=>{
+                    if (err) throw err;
+                    
+                    return res.status(200).json({
+                        success: true,
+                        message: "one more team is created for this match",
+                    })
+                })
+            } else {
+                User.findByIdAndUpdate(user_id, {$push : {created_teams: finalObject}}, (err,result1)=>{
+                    if (err) throw err;
+                    
+                    return res.status(200).json({
+                        success: true,
+                        message: "first team is created for this match",
+                    })
+                })
+            }
+        })
+        
+
+
+
     }
 }

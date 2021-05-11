@@ -5,9 +5,6 @@ const app = express();
 // const request = require('request');
 const path = require('path')
 const port = process.env.PORT
-const accountSID = process.env.ACCOUNT_SID
-const authToken = process.env.AUTH_TOKEN
-const client = require('twilio')(accountSID, authToken)
 const ejs = require('ejs')
 const expressLayout = require('express-ejs-layouts')
 const session = require('express-session')
@@ -24,10 +21,6 @@ const connectDB = require('./config/db');
 connectDB();
 
 
-
-// Twilio Config
-const twilioInit = require('./controller/auth/phoneController')
-twilioInit(client)
 
 
 

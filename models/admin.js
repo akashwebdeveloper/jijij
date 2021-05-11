@@ -10,6 +10,7 @@ const adminSchema = new Schema ({
     fname: {type: String},
     lname: {type: String},
     players: {type: Array},
+    teams: {type: Array},
     auth_token: { type: String }
 });
 

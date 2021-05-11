@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { signup, phone, verify, register, register1, resendotp } = require('../controller/auth/phoneController')
+const { signup, phone, verify, resendotp } = require('../controller/auth/phoneController')
 
 // const { oneUser, multiUser } = require('../controller/notify')
 // const { getalldata, getdata, update, emailverification} = require('../controller/users/users')
@@ -7,7 +7,7 @@ const { getdata} = require('../controller/users/users')
 // const { follow, unfollow } = require('../controller/users/followController')
 const { updatephoto, upload } = require('../controller/photos/profilephoto')
 const { testing, Squad, upcoming } = require('../controller/matches/matchAPI')   
-const { openContestList } = require('../controller/matches/contest')   
+const { openContestList, createTeam } = require('../controller/matches/contest')   
 // const { free, appexclusive, accessories, apparel, electronics, food_beverage, footwear, health_wellness, jewellery, personalcare, sleepsolution, subscription, others } = require('../controller/bazar/bannerController')
 // const { addbookmark, removebookmark, bookmarklist } = require('../controller/bazar/bookmarkController')
 // const { like, unlike } = require('../controller/bazar/likeController')
@@ -18,20 +18,16 @@ router.get('/phone/', phone)
 router.get('/verify/', verify)
 router.get('/resendotp/', resendotp)
 
-// // Insert data into database
-// router.post('/signup', signup)
+// Insert New User into database
+router.post('/signup', signup)
 
-// // get data from database
+// get data from database
 router.post('/getinfo', getdata)
 // router.get('/getalluser', getalldata)
 
 // // router.post('/oneuser', oneUser)
 // // router.post('/multiuser', multiUser)
 
-
-// // if number is register then send otp
-// router.post('/register', register)
-// router.post('/register1', register1)
 
 
 // // Update user data
@@ -84,6 +80,7 @@ router.post('/squad', Squad)
 router.get('/upcomingmatch', upcoming)
 
 router.post('/opencontestlist', openContestList)
+router.post('/create_team', createTeam)
 
 
 

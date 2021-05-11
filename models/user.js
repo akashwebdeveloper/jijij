@@ -8,7 +8,8 @@ const userSchema = new Schema ({
     photos: {type: String},
     bio: {type: String},
     followers:[{type:ObjectId, ref:"User"}],
-    following:[{type:ObjectId, ref:"User"}]
+    following:[{type:ObjectId, ref:"User"}],
+    created_teams: {type: Array},
 }, { timestamps: true });
 
 

@@ -34,33 +34,30 @@
                                     <thead>
                                         <tr>
                                             <th>S. No.</th>
-                                            <th>Player Name</th>
-                                            <th>Player Country</th>
-                                            <th>Player Id</th>
+                                            <th>Team Name</th>
+                                            <th>Team Id</th>
                                             <th>Photo</th>
                                         </tr>
                                     </thead>
                                     <tfoot>
                                         <tr>
                                             <th>S. No.</th>
-                                            <th>Player Name</th>
-                                            <th>Player Country</th>
-                                            <th>Player Id</th>
+                                            <th>Team Name</th>
+                                            <th>Team Id</th>
                                             <th>Photo</th>
                                         </tr>
                                     </tfoot>
                                     <tbody>
-                                        <% admin.players.forEach((player,index)=> { %>
+                                        <% admin.teams.forEach((team,index)=> { %>
                                             
                                             <tr>
                                                 <td><%= index + 1  %></td></a>
-                                                <td><%= player.playerName %></td>
-                                                <td><%= player.country  %></td>
-                                                <td><%= player.playerId  %></td>
-                                                <td><% if(player.picFileName){ %>
-                                                    <img src="/images/players/<%- player.picFileName %>"  width="100" height="100" alt="<%- player.playerId %>" srcset="">
+                                                <td><%= team.teamName %></td>
+                                                <td><%= team.teamId  %></td>
+                                                <td><% if(team.picFileName){ %>
+                                                    <img src="/images/teams/<%- team.picFileName %>"  width="100" height="100" alt="<%- team.teamId %>" srcset="">
                                                     <% } else{ %>
-                                                        <a href="/admin/pic_upload?cat=Player&id=<%- player.playerId %>&name=<%- player.playerName %>">Upload Photo</a>
+                                                        <a href="/admin/pic_upload?cat=Team&id=<%- team.teamId %>&name=<%- team.teamName %>">Upload Photo</a>
                                                   <% } %>
                                                 </td>
                                             </tr>

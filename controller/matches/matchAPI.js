@@ -136,7 +136,7 @@ module.exports = {
                             var pushTeamObj = {};
                             pushTeamObj.playerId = playerData.player
                             pushTeamObj.playerName = eachPlayer.name
-                            pushTeamObj.picUpload = false
+                            pushTeamObj.picFileName = false
                             pushTeamObj.country = eachPlayer.nationality
                             players.push(pushTeamObj)
                             if (eachPlayerRole === "keeper") {

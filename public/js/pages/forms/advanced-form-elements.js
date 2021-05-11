@@ -3,8 +3,8 @@ $(function () {
 
     //Dropzone
     Dropzone.options.frmFileUpload = {
-        paramName: "file",
-        maxFilesize: 2
+        paramName: "photo",
+        maxFilesize: 1
     };
 
     //Masked Input ============================================================================================================================

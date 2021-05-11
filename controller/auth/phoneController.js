@@ -1,11 +1,8 @@
 require('dotenv').config()
 
-const serviceID = process.env.SERVICE_ID
 const User = require('../../models/user')
 
 
-
-function init(client) {
     module.exports = {
         signup(req, res) {
             const { type, fname, lname, username, dob, countrycode, phone, email, gender, weight, height, token, photos } = req.body
@@ -63,237 +60,232 @@ function init(client) {
             })
         },
         register(req, res) {
-            const { countryCode, phone } = req.body
+            // const { countryCode, phone } = req.body
 
-            // User.findOne({ $or: [{ phone: phone }, { email: email }] }, (err, users) => {
-            User.findOne({ phone: phone }, (err, users) => {
-                if (err) {
-                    return res.status(502).json({
-                        success: false,
-                        status: 502,
-                        message: "err from database"
-                    })
-                }
+            // // User.findOne({ $or: [{ phone: phone }, { email: email }] }, (err, users) => {
+            // User.findOne({ phone: phone }, (err, users) => {
+            //     if (err) {
+            //         return res.status(502).json({
+            //             success: false,
+            //             status: 502,
+            //             message: "err from database"
+            //         })
+            //     }
 
-                if (users) {
-                    client
-                        .verify
-                        .services(serviceID)
-                        .verifications
-                        .create({
-                            to: `+${countryCode}${phone}`,
-                            channel: "sms"
-                        })
-                        .then((data) => {
-                            return res.status(200).json({
-                                success: true,
-                                message: "please check your mobile Number for otp verification",
-                                status: 200,
-                                user: [users]
-                            })
-                        }).catch((err) => {
-                            res.status(503).json({
-                                success: false,
-                                message: "please Enter correct country code/ mobile number",
-                                status: 503,
-                                err
-                            })
-                        })
-                } else {
-                    return res.status(202).json({
-                        success: true,
-                        status: 202,
-                        message: "Mobile number is not registered",
-                    })
-                }
-            })
+            //     if (users) {
+            //         client
+            //             .verify
+            //             .services(serviceID)
+            //             .verifications
+            //             .create({
+            //                 to: `+${countryCode}${phone}`,
+            //                 channel: "sms"
+            //             })
+            //             .then((data) => {
+            //                 return res.status(200).json({
+            //                     success: true,
+            //                     message: "please check your mobile Number for otp verification",
+            //                     status: 200,
+            //                     user: [users]
+            //                 })
+            //             }).catch((err) => {
+            //                 res.status(503).json({
+            //                     success: false,
+            //                     message: "please Enter correct country code/ mobile number",
+            //                     status: 503,
+            //                     err
+            //                 })
+            //             })
+            //     } else {
+            //         return res.status(202).json({
+            //             success: true,
+            //             status: 202,
+            //             message: "Mobile number is not registered",
+            //         })
+            //     }
+            // })
         },
         phone(req, res) {
-            const { phone, country } = req.query
+            // const { phone, country } = req.query
 
-            console.log(`+${country}${phone}`)
-            client
-                .verify
-                .services(serviceID)
-                .verifications
-                .create({
-                    to: `+${country}${phone}`,
-                    channel: "sms"
-                })
-                .then((data) => {
-                    res.status(200).json({
-                        success: true,
-                        message: "please check your mobile Number for otp verification",
-                        status: 200
-                    })
-                }).catch((err) => {
-                    res.status(503).json({
-                        success: false,
-                        message: "please Enter correct country code/ mobile number",
-                        status: 503,
-                        err
-                    })
-                })
+            // console.log(`+${country}${phone}`)
+            // client
+            //     .verify
+            //     .services(serviceID)
+            //     .verifications
+            //     .create({
+            //         to: `+${country}${phone}`,
+            //         channel: "sms"
+            //     })
+            //     .then((data) => {
+            //         res.status(200).json({
+            //             success: true,
+            //             message: "please check your mobile Number for otp verification",
+            //             status: 200
+            //         })
+            //     }).catch((err) => {
+            //         res.status(503).json({
+            //             success: false,
+            //             message: "please Enter correct country code/ mobile number",
+            //             status: 503,
+            //             err
+            //         })
+            //     })
         },
         verify(req, res) {
 
-            const { phone, country, code } = req.query
+            // const { phone, country, code } = req.query
 
-            if (!code || code.length != '4') {
-                return res.status(400).json({
-                    message: "can't go ahead without enter correct OTP and OTP should four digit",
-                    status: 400,
-                })
-            }
-            client
-                .verify
-                .services(serviceID)
-                .verificationChecks
-                .create({
-                    to: `+${country}${phone}`,
-                    code: code
-                })
-                .then(verification_check => {
-                    if (verification_check.status === 'pending') {
-                        return res.status(500).json({
-                            success: false,
-                            status: 500,
-                            message: "Code is wrong please Enter again"
-                        })
-                    }
+            // if (!code || code.length != '4') {
+            //     return res.status(400).json({
+            //         message: "can't go ahead without enter correct OTP and OTP should four digit",
+            //         status: 400,
+            //     })
+            // }
+            // client
+            //     .verify
+            //     .services(serviceID)
+            //     .verificationChecks
+            //     .create({
+            //         to: `+${country}${phone}`,
+            //         code: code
+            //     })
+            //     .then(verification_check => {
+            //         if (verification_check.status === 'pending') {
+            //             return res.status(500).json({
+            //                 success: false,
+            //                 status: 500,
+            //                 message: "Code is wrong please Enter again"
+            //             })
+            //         }
 
 
 
-                    console.log(verification_check.status)
+            //         console.log(verification_check.status)
 
-                    User.find({ phone: phone }, (err, data) => {
-                        if (err) {
-                            return res.status(502).json({
-                                success: false,
-                                status: 502,
-                                message: "err from database"
-                            })
-                        }
+            //         User.find({ phone: phone }, (err, data) => {
+            //             if (err) {
+            //                 return res.status(502).json({
+            //                     success: false,
+            //                     status: 502,
+            //                     message: "err from database"
+            //                 })
+            //             }
 
-                        if (data[0]) {
-                            console.log(data);
+            //             if (data[0]) {
+            //                 console.log(data);
                             
-                            return res.status(200).json({
-                                success: true,
-                                status: 200,
-                                message: "Number verified successfully",
-                                countryCode: country,
-                                phone,
-                                user: data[0]
-                            })
-                        }
+            //                 return res.status(200).json({
+            //                     success: true,
+            //                     status: 200,
+            //                     message: "Number verified successfully",
+            //                     countryCode: country,
+            //                     phone,
+            //                     user: data[0]
+            //                 })
+            //             }
 
-                        const user = new User({
-                            phone: phone || ""
-                        })
-                        // New User Save to database
-                        user.save().then(user => {
-                            // login
-                            return res.status(200).json({
-                                success: 1,
-                                status: 200,
-                                message: "New number verfied & data save in to database",
-                                user: user
-                            })
-                        }).catch(err => {
-                            return res.status(503).json({
-                                success: 0,
-                                status: 503,
-                                message: "err from database",
-                                err
-                            })
-                        })
-                    })
-                }).catch((err) => {
-                    res.status(202).json({
-                        success: false,
-                        message: "wrong OTP please enter correct OTP",
-                        status: 202,
-                        err
-                    })
-                })
+            //             const user = new User({
+            //                 phone: phone || ""
+            //             })
+            //             // New User Save to database
+            //             user.save().then(user => {
+            //                 // login
+            //                 return res.status(200).json({
+            //                     success: 1,
+            //                     status: 200,
+            //                     message: "New number verfied & data save in to database",
+            //                     user: user
+            //                 })
+            //             }).catch(err => {
+            //                 return res.status(503).json({
+            //                     success: 0,
+            //                     status: 503,
+            //                     message: "err from database",
+            //                     err
+            //                 })
+            //             })
+            //         })
+            //     }).catch((err) => {
+            //         res.status(202).json({
+            //             success: false,
+            //             message: "wrong OTP please enter correct OTP",
+            //             status: 202,
+            //             err
+            //         })
+            //     })
         },
         resendotp(req, res) {
-            const { phone, country } = req.query
+            // const { phone, country } = req.query
 
-            console.log(`+${country}${phone}`)
-            client
-                .verify
-                .services(serviceID)
-                .verifications
-                .create({
-                    to: `+${country}${phone}`,
-                    channel: "sms"
-                })
-                .then((data) => {
-                    res.status(200).json({
-                        success: true,
-                        message: "please check your mobile Number for otp verification",
-                        status: 200
-                    })
-                }).catch((err) => {
-                    res.status(503).json({
-                        success: false,
-                        message: "please Enter correct country code/ mobile number",
-                        status: 503,
-                        err
-                    })
-                })
+            // console.log(`+${country}${phone}`)
+            // client
+            //     .verify
+            //     .services(serviceID)
+            //     .verifications
+            //     .create({
+            //         to: `+${country}${phone}`,
+            //         channel: "sms"
+            //     })
+            //     .then((data) => {
+            //         res.status(200).json({
+            //             success: true,
+            //             message: "please check your mobile Number for otp verification",
+            //             status: 200
+            //         })
+            //     }).catch((err) => {
+            //         res.status(503).json({
+            //             success: false,
+            //             message: "please Enter correct country code/ mobile number",
+            //             status: 503,
+            //             err
+            //         })
+            //     })
         },
         register1(req, res) {
-            const { countryCode, phone } = req.body
+            // const { countryCode, phone } = req.body
 
-            // User.findOne({ $or: [{ phone: phone }, { email: email }] }, (err, users) => {
-            User.findOne({ phone: phone }, (err, users) => {
-                if (err) {
-                    return res.status(502).json({
-                        success: false,
-                        status: 502,
-                        message: "err from database"
-                    })
-                }
+            // // User.findOne({ $or: [{ phone: phone }, { email: email }] }, (err, users) => {
+            // User.findOne({ phone: phone }, (err, users) => {
+            //     if (err) {
+            //         return res.status(502).json({
+            //             success: false,
+            //             status: 502,
+            //             message: "err from database"
+            //         })
+            //     }
 
-                if (users) {
-                    client
-                        .verify
-                        .services(serviceID)
-                        .verifications
-                        .create({
-                            to: `+${countryCode}${phone}`,
-                            channel: "sms"
-                        })
-                        .then((data) => {
-                            return res.status(200).json({
-                                success: true,
-                                message: "please check your mobile Number for otp verification",
-                                status: 200
-                            })
-                        }).catch((err) => {
-                            res.status(503).json({
-                                success: false,
-                                message: "please Enter correct country code/ mobile number",
-                                status: 503,
-                                err
-                            })
-                        })
-                } else {
-                    return res.status(202).json({
-                        success: true,
-                        status: 202,
-                        message: "Mobile number is not registered",
-                    })
-                }
-            })
+            //     if (users) {
+            //         client
+            //             .verify
+            //             .services(serviceID)
+            //             .verifications
+            //             .create({
+            //                 to: `+${countryCode}${phone}`,
+            //                 channel: "sms"
+            //             })
+            //             .then((data) => {
+            //                 return res.status(200).json({
+            //                     success: true,
+            //                     message: "please check your mobile Number for otp verification",
+            //                     status: 200
+            //                 })
+            //             }).catch((err) => {
+            //                 res.status(503).json({
+            //                     success: false,
+            //                     message: "please Enter correct country code/ mobile number",
+            //                     status: 503,
+            //                     err
+            //                 })
+            //             })
+            //     } else {
+            //         return res.status(202).json({
+            //             success: true,
+            //             status: 202,
+            //             message: "Mobile number is not registered",
+            //         })
+            //     }
+            // })
         }
 
     }
-}
-
-
-
-module.exports = init
