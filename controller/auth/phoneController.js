@@ -26,8 +26,11 @@ const User = require('../../models/user')
                     })
                 }
 
+                var str = String(phone)
+
                 const user = new User({
                     phone: phone || "",
+                    userName: `${str.substring(0, 2)}*****${str.substring(7, 10)}`
                 })
                 // New User Save to database
                 user.save().then(user => {

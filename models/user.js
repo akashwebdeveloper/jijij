@@ -4,6 +4,7 @@ const Schema = mongoose.Schema
 
 const userSchema = new Schema ({
     phone: {type: Number},
+    userName: {type: String},
     cash: {type: Array, default: {
         title: 'Welcome bonus',
         description: 'Credited To Bonus Cash Balance',
