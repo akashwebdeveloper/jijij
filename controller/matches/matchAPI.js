@@ -214,7 +214,9 @@ module.exports = {
                 if (error) throw new Error(error)
                 for (let index = moment().format('DD'); index <= moment().daysInMonth(); index++) {
 
-                    response.body.data.months[0].days[index - 1].matches.forEach(match => {
+                    const notStartedMatch = response.body.data.months[0].days[index - 1].matches.filter(match => match.status === 'notstarted');
+
+                    notStartedMatch.forEach(match => {
 
                         var sendMatch = {};
                         sendMatch.key = match.key
