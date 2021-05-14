@@ -33,8 +33,11 @@ module.exports = {
         return res.render('contestForm', { page_name: 'form' })
     },
     addContest: (req, res) => {
-        console.log(req.body);
-        const { prize_pool, spot, entry_fee, entry_limit, from, to, ammount } = req.body
+        var { prize_pool, spot, entry_fee, entry_limit, from, to, ammount, rules, notes } = req.body
+
+        Array.isArray(from) ? from : from = [from], to = [to], ammount = [ammount]
+        Array.isArray(rules) ? rules : rules = [rules]
+        Array.isArray(notes) ? notes : notes = [notes]
 
         var winner = [];
 
@@ -54,12 +57,11 @@ module.exports = {
             winner,
             entryFee: entry_fee,
             entryLimit: entry_limit,
+            rules: rules,
+            notes: notes,
         })
 
         contest.save().then(user => {
-
-
-
 
             // save Contest
             return res.redirect('/admin/create_contest')

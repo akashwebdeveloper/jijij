@@ -8,6 +8,8 @@ const contestSchema = new Schema ({
     winner: {type: Array},
     entryFee: {type: Number},
     entryLimit: {type: Number},
+    rules: {type: Array},
+    notes: {type: Array},
 });
 
 

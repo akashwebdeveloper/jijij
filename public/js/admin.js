@@ -473,7 +473,8 @@ $(function () {
 
 
 
-// for contest form
+// * for contest form
+// for winner break out
 $(document).ready(function () {
     var max_input = 45;
     var x = 1;
@@ -522,6 +523,84 @@ $(document).ready(function () {
         }
     });
     $('.content').on("click", ".remove-lnk", function (e) {
+        e.preventDefault();
+        $(this).parent('div').parent('div').remove();
+        x--;
+    })
+});
+
+
+// for rules
+$(document).ready(function () {
+    var max_input = 45;
+    var x = 1;
+    $('.add-btn1').click(function (e) {
+        e.preventDefault();
+        if (x < max_input) {
+            x++;
+            $('.wrapper1').append(`
+<div class="winner">
+<div class="col-md-11">
+<div class="input-group">
+    <span class="input-group-addon mb-1">
+        <i class="material-icons">toc</i>
+    </span>
+    <div class="form-line">
+        <input type="text" name="rules" class="form-control"
+            placeholder="Ex: 2" required>
+    </div>
+</div>
+</div>
+                            <div class="col-md-1">
+                                    <a href="#" class="remove-lnk1" alt="Remove" style="cursor: pointer;"
+                                        title="Remove"><i class="material-icons">remove</i></a>
+                            </div>
+                            <div>          
+        `);
+        }
+    });
+    $('.content').on("click", ".remove-lnk1", function (e) {
+        e.preventDefault();
+        $(this).parent('div').parent('div').remove();
+        x--;
+    })
+});
+
+
+
+
+
+
+// for notes
+$(document).ready(function () {
+    var max_input = 45;
+    var x = 1;
+    $('.add-btn2').click(function (e) {
+        e.preventDefault();
+        if (x < max_input) {
+            x++;
+            $('.wrapper2').append(`
+<div class="winner">
+<div class="col-md-11">
+<div class="input-group">
+    <span class="input-group-addon mb-1">
+        <i class="material-icons">note</i>
+    </span>
+    <div class="form-line">
+        <input type="text" name="notes" class="form-control"
+            placeholder="Ex: 2" required>
+    </div>
+</div>
+</div>
+                            <div class="col-md-1">
+                                    <a href="#" class="remove-lnk2" alt="Remove" style="cursor: pointer;"
+                                        title="Remove"><i class="material-icons">remove</i></a>
+                            </div>
+                            <div>          
+        `);
+        }
+    });
+    $('.content').on("click", ".remove-lnk2", function (e) {
         e.preventDefault();
         $(this).parent('div').parent('div').remove();
         x--;

@@ -5,7 +5,7 @@ const Schema = mongoose.Schema
 const subContestSchema = new Schema ({
     contestId: {type: ObjectId},
     matchKey: {type: String},
-    joinedUser: [{type:ObjectId, ref:"User"}],
+    joined_user_team: [],
     isFull: {type: Boolean, default: false},
     // winner: {type: Array},
     // entryFee: {type: Number},

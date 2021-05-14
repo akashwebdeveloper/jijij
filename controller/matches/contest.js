@@ -4,16 +4,15 @@ const User = require('../../models/user')
 const Admin = require('../../models/admin')
 const Subcontest = require('../../models//sub_contest')
 const { v4: uuidv4 } = require('uuid');
-var ACCESS_TOKEN = '';
 
 
 module.exports = {
     openContestList: (req, res) => {
-        const { match_key } = req.body
+        const { user_id, match_key } = req.body
         var contestList = [];
 
         // Function for making contest list by using contest and sub contest model
-        function contestListMaking(contest, subcontest) {
+        function contestListMaking(contest, subcontest, created_team) {
             contest.forEach(cont => {
                 subcontest.forEach(subcont => {
                     if (String(cont._id) === String(subcont.contestId)) {
@@ -23,7 +22,7 @@ module.exports = {
                             match_key: match_key,
                             prizePool: cont.prizePool,
                             spot: cont.spot,
-                            spotLeft: (cont.spot - subcont.joinedUser.length),
+                            spotLeft: (cont.spot - subcont.joined_user_team.length),
                             winner: cont.winner,
                             entryFee: cont.entryFee,
                             entryLimit: cont.entryLimit,
@@ -35,53 +34,61 @@ module.exports = {
             return res.status(200).json({
                 success: true,
                 message: "Upcoming Match Contest Available",
-                list: contestList
+                list: contestList,
+                created_team
             })
         }
 
 
         Contest.find({}, (err, contest) => {
+            if (err) throw err;
             Subcontest.find({ $and: [{ matchKey: match_key }, { isFull: false }] }, (err, subcon) => {
                 if (err) throw err;
-                var insertArray = [];
-                var newContests = contest.filter(entry1 => !subcon.some(entry2 => String(entry1._id) === String(entry2.contestId)));
+                User.findById(user_id, ['created_team'], (err, user) => {
+                    if (err) throw err;
 
-                // Checking that this is first time userchecking contact list for this match
-                if (!subcon.length) {
-                    contest.forEach(con => {
-                        var pushObj = {
-                            contestId: con._id,
-                            matchKey: match_key
-                        };
-                        insertArray.push(pushObj);
-                    });
 
-                    Subcontest.insertMany(insertArray)
-                        .then(function (subcontest) {
-                            contestListMaking(contest, subcontest)
-                        })
-                        .catch(function (err) {
-                            return res.status(500).send(err);
-                        });
-                } else if (newContests.length) {
                     var insertArray = [];
-                    newContests.forEach(con => {
-                        var pushObj = {
-                            contestId: con._id,
-                            matchKey: match_key,
-                        };
-                        insertArray.push(pushObj);
-                    });
-                    Subcontest.insertMany(insertArray)
-                        .then(
-                            contestListMaking(contest, subcon)
-                        )
-                        .catch(function (err) {
-                            return res.status(500).send(err);
+                    var created_team = user.created_team.length;
+                    var newContests = contest.filter(entry1 => !subcon.some(entry2 => String(entry1._id) === String(entry2.contestId)));
+
+                    // Checking that this is first time userchecking contact list for this match
+                    if (!subcon.length) {
+                        contest.forEach(con => {
+                            var pushObj = {
+                                contestId: con._id,
+                                matchKey: match_key
+                            };
+                            insertArray.push(pushObj);
                         });
-                } else {
-                    contestListMaking(contest, subcon)
-                }
+
+                        Subcontest.insertMany(insertArray)
+                            .then(function (subcontest) {
+                                contestListMaking(contest, subcontest, created_team)
+                            })
+                            .catch(function (err) {
+                                return res.status(500).send(err);
+                            });
+                    } else if (newContests.length) {
+                        var insertArray = [];
+                        newContests.forEach(con => {
+                            var pushObj = {
+                                contestId: con._id,
+                                matchKey: match_key,
+                            };
+                            insertArray.push(pushObj);
+                        });
+                        Subcontest.insertMany(insertArray)
+                            .then(
+                                contestListMaking(contest, subcon, created_team)
+                            )
+                            .catch(function (err) {
+                                return res.status(500).send(err);
+                            });
+                    } else {
+                        contestListMaking(contest, subcon, created_team)
+                    }
+                })
             })
         })
     },
@@ -172,13 +179,13 @@ module.exports = {
 
                 Subcontest.findById(contest_id, ['contestId'], (err, subcontests) => {
                     if (err) throw err;
-                    Contest.findById(subcontests.contestId, ['entryFee'], (err, contest) => {
+                    Contest.findById(subcontests.contestId, ['entryFee', 'entryLimit'], (err, contest) => {
                         if (err) throw err;
 
                         var entryFee = contest.entryFee,
-                        winning = 0,
-                        deposit = 0,
-                        bonus = 0;
+                            winning = 0,
+                            deposit = 0,
+                            bonus = 0;
 
                         result.cash.forEach(each => {
                             if (each.wallet === 'winning') {
@@ -191,33 +198,238 @@ module.exports = {
                         });
 
                         var enough_cash = false
+                        var use_bonus = 0
 
-                        if (bonus > Math.round((entryFee * 4)/100)) {
-                            entryFee = entryFee - Math.round((entryFee * 4)/100)
-                        }else {
+                        if (bonus > Math.round((entryFee * 4) / 100)) {
+                            entryFee = entryFee - Math.round((entryFee * 4) / 100)
+                            use_bonus = Math.round((entryFee * 4) / 100)
+                        } else {
                             entryFee = entryFee - bonus
+                            use_bonus = bonus
                         }
 
-                        if (deposit+winning >= entryFee) {
+                        if (deposit + winning >= entryFee) {
                             enough_cash = true
-                        }else {
-                            entryFee = entryFee - (deposit+winning);
+                        } else {
+                            entryFee = entryFee - (deposit + winning);
                         }
 
 
                         return res.status(200).json({
                             success: true,
-                            message:`you have created ${result.created_teams[0].data.length} ${(result.created_teams[0].data.length > 1 ? 'teams' :'team')} for this match`,
+                            message: `you have created ${result.created_teams[0].data.length} ${(result.created_teams[0].data.length > 1 ? 'teams' : 'team')} for this match`,
                             data: {
                                 teamList,
                                 entryFee: contest.entryFee,
                                 enough_cash,
-                                add_more: enough_cash ? '' : entryFee
+                                use_bonus,
+                                max_team: entryLimit
                             }
                         })
                     })
                 })
             })
         })
+    },
+    joinContest: (req, res) => {
+        var { user_id, contest_id, teams_id } = req.body
+
+
+        User.findById(user_id, ['cash'], (err, result) => {
+            if (err) throw err;
+            Subcontest.findOne({ $and: [{ _id: contest_id }, { isFull: false }] }, ['contestId', 'joined_user_team'], (err, subcontests) => {
+                if (err) throw err;
+
+                // * Checking that contest is full or not
+                if (!subcontests) {
+                    return res.status(400).json({
+                        success: false,
+                        message: `Contest is Fulled please join another One`,
+                        data: {
+                            entryFee: '',
+                            enough_cash: '',
+                            use_winning_deposit: '',
+                            use_bonus: '',
+                            add_more: ''
+                        }
+                    })
+                }
+
+                Contest.findById(subcontests.contestId, ['entryFee'], (err, contest) => {
+                    if (err) throw err;
+
+                    var entryFee = contest.entryFee,
+                        contestEntryFee = contest.entryFee,
+                        winning = 0,
+                        deposit = 0,
+                        bonus = 0;
+
+                    Array.isArray(teams_id) ? (entryFee *= teams_id.length, contestEntryFee *= teams_id.length, teams_id) : (entryFee, contestEntryFee, teams_id = [teams_id])
+
+                    //  *If any team already joined this Contest
+                    let alreadyJoined = subcontests.joined_user_team.filter(o1 => teams_id.some(o2 => o1.Team === o2));
+                    if (alreadyJoined.length) {
+                        return res.status(400).json({
+                            success: false,
+                            message: `you can't join same team in same contest please createAnother Team`,
+                            data: {
+                                entryFee: contestEntryFee,
+                                enough_cash: '',
+                                use_winning_deposit: '',
+                                use_bonus: '',
+                                add_more: ''
+                            }
+                        })
+                    }
+
+                    // * If User is trying to join more than entryLimit teams
+                    if (teams_id.length > contest.entryLimit) {
+                        return res.status(400).json({
+                            success: false,
+                            message: `you can't join this contest with more than ${contest.entryLimit} teams`,
+                            data: {
+                                entryFee: contestEntryFee,
+                                enough_cash: '',
+                                use_winning_deposit: '',
+                                use_bonus: '',
+                                add_more: ''
+                            }
+                        })
+                    }
+
+                    //  * Getting winning, deposit, bonus cash from transaction list
+                    result.cash.forEach(each => {
+                        if (each.wallet === 'winning') {
+                            each.added ? winning += each.ammount : winning -= each.ammount
+                        } else if (each.wallet === 'deposit') {
+                            each.added ? deposit += each.ammount : deposit -= each.ammount
+                        } else if (each.wallet === 'bonus') {
+                            each.added ? bonus += each.ammount : bonus -= each.ammount
+                        }
+                    });
+
+                    var enough_cash = false
+                    var use_bonus = 0
+
+                    if (bonus > Math.round((entryFee * 4) / 100)) {
+                        entryFee = entryFee - Math.round((entryFee * 4) / 100)
+                        use_bonus = Math.round((entryFee * 4) / 100)
+                    } else {
+                        entryFee = entryFee - bonus
+                        use_bonus = bonus
+                    }
+
+                    // * Checking that enough cash is available or not for join contest
+                    if (deposit + winning >= entryFee) {
+                        enough_cash = true
+                    } else {
+                        entryFee = entryFee - (deposit + winning);
+                    }
+
+                    if (!enough_cash) {
+                        return res.status(200).json({
+                            success: true,
+                            message: `you have to add more money to join the contest`,
+                            data: {
+                                entryFee: contestEntryFee,
+                                enough_cash,
+                                use_winning_deposit: deposit + winning,
+                                use_bonus,
+                                add_more: entryFee
+                            }
+                        })
+                    } else {
+                        var transaction = [];
+                        var pushArray = [];
+                        teams_id.forEach(id => {
+                            var pushTeam = {};
+                            pushTeam.User = user_id
+                            pushTeam.Team = id
+                            pushArray.push(pushTeam)
+                        });
+
+
+                        // * Checking that contest is full or not
+                        var full = subcontests.joined_user_team.length >= 9 ? true : false
+                        // Debited from bonus
+                        var pushBonusObj = {
+                            title: 'Joined A Contest',
+                            description: 'Debited from Bonus Cash Balance',
+                            ammount: use_bonus,
+                            added: false,
+                            wallet: 'bonus',
+                            Date: new Date()
+                        }
+                        use_bonus ? transaction.push(pushBonusObj) : transaction;
+
+                        // Debited from deposit
+                        var pushDepositObj = {
+                            title: 'Joined A Contest',
+                            description: 'Debited from Deposit Cash Balance',
+                            ammount: deposit > contestEntryFee - use_bonus ? contestEntryFee : deposit,
+                            added: false,
+                            wallet: 'deposit',
+                            Date: new Date()
+                        }
+                        deposit ? transaction.push(pushDepositObj) : transaction;
+
+                        // Debited from winning
+                        var pushWinningObj = {
+                            title: 'Joined A Contest',
+                            description: 'Debited from Winning Cash Balance',
+                            ammount: contestEntryFee - (deposit + use_bonus),
+                            added: false,
+                            wallet: 'winning',
+                            Date: new Date()
+                        }
+                        deposit < (contestEntryFee - use_bonus) ? transaction.push(pushWinningObj) : transaction;
+
+// Pushing team in the contest
+                        Subcontest.updateMany({ $and: [{ _id: contest_id }, { isFull: false }] }, { $push: { joined_user_team: pushArray }, $set: { isFull: full }, }, (err, subcont) => {
+                            if (err) throw err;
+
+                            // * Checking that contest is fulled or not
+                            if (!subcont) {
+                                return res.status(400).json({
+                                    success: false,
+                                    message: `Contest is Fulled please join another One`,
+                                    data: {
+                                        entryFee: contestEntryFee,
+                                        enough_cash: '',
+                                        use_winning_deposit: '',
+                                        use_bonus: '',
+                                        add_more: ''
+                                    }
+                                })
+                            }
+
+                            //  * Updating Cash Deduction
+                            User.findByIdAndUpdate(user_id, { $push: { cash: transaction } }, (err) => {
+                                if (err) throw err;
+
+                                return res.status(200).json({
+                                    success: true,
+                                    message: `you have Successfully joined this contest`,
+                                    data: {
+                                        entryFee: contestEntryFee,
+                                        enough_cash,
+                                        use_winning_deposit: pushDepositObj.ammount + pushWinningObj.ammount,
+                                        use_bonus,
+                                        add_more: ''
+                                    }
+                                })
+                            })
+                        })
+
+
+
+
+                    }
+
+
+                })
+            })
+        })
+
     }
 }
