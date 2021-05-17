@@ -4,7 +4,7 @@ const User = require('../../models/user')
 const Admin = require('../../models/admin')
 const Subcontest = require('../../models//sub_contest')
 const { v4: uuidv4 } = require('uuid');
-
+var mongoose = require('mongoose');
 
 module.exports = {
     openContestList: (req, res) => {
@@ -334,7 +334,7 @@ module.exports = {
 
 
                     // * Checking that team joining doesn't cross spot limit
-                    if (subcontests.joined_user_team+teams_id.length > contest.spot) {
+                    if (subcontests.joined_user_team + teams_id.length > contest.spot) {
                         return res.status(400).json({
                             success: false,
                             message: `Contest is Fulled please join another One`,
@@ -497,6 +497,68 @@ module.exports = {
     },
     contestDetails: (req, res) => {
         const { user_id, contest_id } = req.body;
+
+        var details = {}, leaderBoard = {};
+
+        Subcontest.findById(contest_id, ['contestId', 'joined_user_team'], (err, subcontests) => {
+            if (err) throw err;
+            Contest.findById(subcontests.contestId, ['entryFee', 'entryLimit', 'spot', 'notes', 'winner', 'entryLimit'], (err, contest) => {
+                if (err) throw err;
+
+
+                var userJoinedTeam = subcontests.joined_user_team.filter(person => person.User === user_id);
+
+                var usersList = [];
+                subcontests.joined_user_team.forEach(joiner => {
+                    var pushObj = {};
+                    var alreadyInList = usersList.filter(person => person.user === joiner.User);
+                    if (alreadyInList.length) {
+                        //Find index of specific object using findIndex method.    
+                        objIndex = usersList.findIndex((obj => obj.user === joiner.User));
+                        usersList[objIndex].team += 1;
+                    } else {
+                        pushObj.user = joiner.User
+                        pushObj.team = 1
+                        usersList.push(pushObj);
+                    }
+                });
+
+                let objectIdArray = usersList.map(s => new mongoose.Types.ObjectId(s.user));
+
+                User.find({ _id: { $in: objectIdArray } }, ['photos', 'userName'], (err, data) => {
+                    if (err) throw err;
+
+                    data.forEach(user => {
+                        objIndex = usersList.findIndex((obj => obj.user === String(user._id)));
+                        usersList[objIndex].username = user.userName
+                        usersList[objIndex].photo = user.photos
+                    });
+
+
+                    details.prizePool = contest.prizePool;
+                    details.spotFull, leaderBoard.spotFull = subcontests.joined_user_team.length;
+                    details.spotSize, leaderBoard.spot = contest.spot;
+                    details.userJoinedTeam = userJoinedTeam.length;
+                    details.totalWinner = contest.winner[contest.winner.length - 1].to;
+                    details.entryFee = contest.entryFee;
+                    details.winnerBreakup = contest.winner;
+                    details.note = contest.notes;
+                    details.maxTeam = contest.entryLimit;
+                    leaderBoard.joinedUserList = usersList
+
+
+                    return res.status(200).json({
+                        success: true,
+                        message: `contest all details`,
+                        data: {
+                            details,
+                            leaderBoard
+                        }
+                    })
+                })
+            })
+        })
+
 
     }
 }
