@@ -7,7 +7,7 @@ const { getdata, update} = require('../controller/users/users')
 // const { follow, unfollow } = require('../controller/users/followController')
 const { updatephoto, upload } = require('../controller/photos/profilephoto')
 const { testing, Squad, upcoming } = require('../controller/matches/matchAPI')   
-const { openContestList, createTeam, teamList, joinContest } = require('../controller/matches/contest')   
+const { openContestList, createTeam, teamList, joinContest, updateTeam } = require('../controller/matches/contest')   
 // const { free, appexclusive, accessories, apparel, electronics, food_beverage, footwear, health_wellness, jewellery, personalcare, sleepsolution, subscription, others } = require('../controller/bazar/bannerController')
 // const { addbookmark, removebookmark, bookmarklist } = require('../controller/bazar/bookmarkController')
 // const { like, unlike } = require('../controller/bazar/likeController')
@@ -79,6 +79,7 @@ router.post('/opencontestlist', openContestList)
 router.post('/create_team', createTeam)
 router.post('/team_list', teamList)
 router.post('/join_contest', joinContest)
+router.post('/update_team', updateTeam)
 
 
 

@@ -38,7 +38,7 @@ options = {
 const schedule = require('node-schedule');
 const { json } = require('body-parser');
 const { response } = require('express');
-schedule.scheduleJob('0 0 0 * * *', function () {
+schedule.scheduleJob('0 0 0/12 * * *', function () {
     request(authToken, function (error, response) {
         if (error) throw new Error(error)
         // console.log(response.body)
@@ -63,7 +63,8 @@ module.exports = {
                 Admin.updateOne({ username: 'mpl' }, { $set: { auth_token: response.body.auth.access_token } }, (err, data) => {
                     if (err) throw err;
                     return res.status(200).json({
-                        message: "auth_token updated successfully"
+                        message: "auth_token updated successfully",
+                        response,data
                     })
                 });
             }

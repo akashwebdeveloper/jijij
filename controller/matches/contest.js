@@ -44,12 +44,18 @@ module.exports = {
             if (err) throw err;
             Subcontest.find({ $and: [{ matchKey: match_key }, { isFull: false }] }, (err, subcon) => {
                 if (err) throw err;
-                User.findById(user_id, ['created_team'], (err, user) => {
+                User.findOne({ _id: user_id, "created_teams.match_key": match_key }, ['created_teams'], (err, user) => {
                     if (err) throw err;
 
+                    // * Checking  that how much team creted by user for current much
+                    var created_team = 0;
+                    user.created_teams.forEach(match => {
+                        if (match.match_key === match_key) {
+                            created_team = match.data.length
+                        }
+                    });
 
                     var insertArray = [];
-                    var created_team = user.created_team.length;
                     var newContests = contest.filter(entry1 => !subcon.some(entry2 => String(entry1._id) === String(entry2.contestId)));
 
                     // Checking that this is first time userchecking contact list for this match
@@ -106,7 +112,6 @@ module.exports = {
         const finalObject = {}
 
         role.forEach((eachPlayerRole, index) => {
-            const pushObj = {};
 
             if (eachPlayerRole === "wk") {
 
@@ -231,6 +236,51 @@ module.exports = {
             })
         })
     },
+    updateTeam: (req, res) => {
+        const { match_key, player_id, role, captain, vc_captain, user_id, team_id } = req.body
+        PlayerList = {
+            teamId: team_id,
+            wk: [],
+            bat: [],
+            ar: [],
+            bowl: [],
+            captain,
+            vc_captain
+        }
+        const finalObject = {}
+
+        role.forEach((eachPlayerRole, index) => {
+
+            if (eachPlayerRole === "wk") {
+
+                PlayerList.wk.push(player_id[index])
+            } else if (eachPlayerRole === "bat") {
+
+                PlayerList.bat.push(player_id[index])
+            } else if (eachPlayerRole === "ar") {
+
+                PlayerList.ar.push(player_id[index])
+            } else {
+                PlayerList.bowl.push(player_id[index])
+            }
+        });
+
+        finalObject.match_key = match_key
+        finalObject.data = [PlayerList]
+
+        User.findOneAndUpdate({ _id: user_id, "created_teams.match_key": match_key }, { $pull: { "created_teams.$.data": { "teamId": team_id } } }, (err, result1) => {
+            if (err) throw err;
+
+            User.findOneAndUpdate({ _id: user_id, "created_teams.match_key": match_key }, { $push: { "created_teams.$.data": PlayerList } }, (err, result2) => {
+                if (err) throw err;
+
+                return res.status(200).json({
+                    success: true,
+                    message: "team Updated successfully",
+                })
+            })
+        })
+    },
     joinContest: (req, res) => {
         var { user_id, contest_id, teams_id } = req.body
 
@@ -255,7 +305,7 @@ module.exports = {
                     })
                 }
 
-                Contest.findById(subcontests.contestId, ['entryFee'], (err, contest) => {
+                Contest.findById(subcontests.contestId, ['entryFee', 'entryLimit', 'spot'], (err, contest) => {
                     if (err) throw err;
 
                     var entryFee = contest.entryFee,
@@ -282,8 +332,28 @@ module.exports = {
                         })
                     }
 
+
+                    // * Checking that team joining doesn't cross spot limit
+                    if (subcontests.joined_user_team+teams_id.length > contest.spot) {
+                        return res.status(400).json({
+                            success: false,
+                            message: `Contest is Fulled please join another One`,
+                            data: {
+                                entryFee: contestEntryFee,
+                                enough_cash: '',
+                                use_winning_deposit: '',
+                                use_bonus: '',
+                                add_more: ''
+                            }
+                        })
+                    }
+
+                    // How much team User Already joined in this contest
+                    var teamJoinedThisContest = subcontests.joined_user_team.filter(o1 => o1.User === user_id);
+                    var enough_limit = teamJoinedThisContest.length + teams_id.length;
+
                     // * If User is trying to join more than entryLimit teams
-                    if (teams_id.length > contest.entryLimit) {
+                    if (enough_limit > contest.entryLimit) {
                         return res.status(400).json({
                             success: false,
                             message: `you can't join this contest with more than ${contest.entryLimit} teams`,
@@ -350,7 +420,7 @@ module.exports = {
 
 
                         // * Checking that contest is full or not
-                        var full = subcontests.joined_user_team.length >= 9 ? true : false
+                        var full = subcontests.joined_user_team.length >= contest.spot - 1 ? true : false
                         // Debited from bonus
                         var pushBonusObj = {
                             title: 'Joined A Contest',
@@ -384,7 +454,7 @@ module.exports = {
                         }
                         deposit < (contestEntryFee - use_bonus) ? transaction.push(pushWinningObj) : transaction;
 
-// Pushing team in the contest
+                        // Pushing team in the contest
                         Subcontest.updateMany({ $and: [{ _id: contest_id }, { isFull: false }] }, { $push: { joined_user_team: pushArray }, $set: { isFull: full }, }, (err, subcont) => {
                             if (err) throw err;
 
@@ -420,16 +490,13 @@ module.exports = {
                                 })
                             })
                         })
-
-
-
-
                     }
-
-
                 })
             })
         })
+    },
+    contestDetails: (req, res) => {
+        const { user_id, contest_id } = req.body;
 
     }
 }

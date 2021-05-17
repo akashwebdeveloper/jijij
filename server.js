@@ -10,9 +10,15 @@ const expressLayout = require('express-ejs-layouts')
 const session = require('express-session')
 const flash = require('express-flash')
 const passport = require('passport')
+const colors = require('colors')
 // var admin = require("firebase-admin")
 
 
+console.log('hii my name is akash'.blue);
+console.log('hii my name is akash'.underline.red);
+console.log('hii my name is akash'.inverse.green);
+console.log('hii my name is akash'.rainbow);
+console.log('hii my name is akash'.trap);
 
 
 
