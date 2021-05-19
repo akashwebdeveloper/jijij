@@ -49,11 +49,13 @@ module.exports = {
 
                     // * Checking  that how much team creted by user for current much
                     var created_team = 0;
-                    user.created_teams.forEach(match => {
-                        if (match.match_key === match_key) {
-                            created_team = match.data.length
-                        }
-                    });
+                    if (user) {
+                        user.created_teams.forEach(match => {
+                            if (match.match_key === match_key) {
+                                created_team = match.data.length
+                            }
+                        });
+                    }
 
                     var insertArray = [];
                     var newContests = contest.filter(entry1 => !subcon.some(entry2 => String(entry1._id) === String(entry2.contestId)));
