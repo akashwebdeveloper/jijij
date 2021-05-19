@@ -306,9 +306,9 @@ module.exports = {
     upcoming: (req, res) => {
         Match.findOne({ month: moment().format('YYYY-MM') }, ['data'], (err, matchData) => {
             if (err) throw err;
+            var upcomingMatch = matchData.data.filter(eachMatch => moment(eachMatch.startingTime) >= moment());
 
-
-            matchData.data.forEach((eachMatch, index) => {
+            upcomingMatch.forEach((eachMatch, index) => {
                 const matchStart = moment(eachMatch.startingTime)
 
                 const days = matchStart.diff(moment(), 'days')
@@ -325,10 +325,10 @@ module.exports = {
                     time += `${hours} Hours ${minutes} Minutes `;
                 }
 
-                matchData.data[index].remaingTime = time
+                upcomingMatch[index].remaingTime = time
             });
 
-            const list = matchData.data.sort((a, b) => {
+            const list = upcomingMatch.sort((a, b) => {
                 return moment(a.startingTime).diff(b.startingTime);
             });
             return res.status(200).json({
@@ -339,6 +339,6 @@ module.exports = {
         })
     },
     upcome: (req, res) => {
-       
+
     }
 }
