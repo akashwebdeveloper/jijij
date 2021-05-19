@@ -1,10 +1,11 @@
 require('dotenv').config()
-const User = require('../../models/user')
+const Match = require('../../models/match')
 const Admin = require('../../models/admin')
 const moment = require('moment');
-const request = require('request')
+const request = require('request');
+const axios = require('axios');
 var ACCESS_TOKEN = '';
-
+console.log(`${moment().format()}`.rainbow);
 
 
 var APP_ID = process.env.APP_ID, // get it from .env
@@ -51,6 +52,124 @@ schedule.scheduleJob('0 0 0/12 * * *', function () {
     })
 });
 
+schedule.scheduleJob('5 0 1 * *', function () {
+    Admin.findOne({ username: 'mpl' }, ['auth_token'], (err, data) => {
+        if (err) throw err;
+        ACCESS_TOKEN = data.auth_token
+
+
+        var list = [];
+
+        async function schedule(apiData) {
+            for (let index = moment().format('DD'); index <= moment().daysInMonth(); index++) {
+
+                apiData.forEach(eachData => {
+
+                    const currentMonth = eachData.data.months.filter(month => month.current_month === true);
+
+                    if (currentMonth[0].days[index - 1].matches.length) {
+
+                        const notStartedMatch = eachData.data.months[0].days[index - 1].matches.filter(match => match.status === 'notstarted');
+                        notStartedMatch.forEach(match => {
+
+                            var sendMatch = {};
+                            sendMatch.key = match.key
+                            sendMatch.seriesName = match.season.name
+                            sendMatch.matchName = match.short_name
+                            sendMatch.team1_id = match.teams.a.match.season_team_key
+                            sendMatch.team1 = match.teams.a.short_name;
+                            sendMatch.team1_logo = ''
+                            sendMatch.team2_id = match.teams.b.match.season_team_key
+                            sendMatch.team2 = match.teams.b.short_name;
+                            sendMatch.team2_logo = ''
+
+                            const matchStart = moment(match.start_date.iso)
+
+                            const days = matchStart.diff(moment(), 'days')
+                            const hours = matchStart.diff(moment(), 'hours') - (24 * (days));
+                            const minutes = (matchStart.diff(moment(), 'minutes') - (1440 * (days))) - (60 * hours);
+                            // console.log(days);
+                            // console.log(hours);
+                            // console.log(minutes);
+
+                            var time = "";
+                            if (days > 0) {
+                                time += `${days} Days ${hours} Hours`;
+                            } else {
+                                time += `${hours} Hours ${minutes} Minutes `;
+                            }
+
+                            // console.log(time);
+                            sendMatch.remaingTime = time
+                            sendMatch.doNotUse = match.start_date.iso
+
+                            list.push(sendMatch)
+                        });
+                    }
+                });
+            }
+
+            const match = new Match({
+                month: moment().format('YYYY-MM'),
+                data: list
+            })
+
+            // New month upcoming match Save in to database
+            match.save().then(match => {
+               console.log('New month upcoming match Save in to database')
+            }).catch(err => {
+                console.log(err)
+            })
+            return list;
+        }
+        
+        axios.get(host + `/rest/v4/coverage/?access_token=${ACCESS_TOKEN}`).then(responses => {
+
+            const boardKeys = responses.data.data.boards
+
+            async function seasonKeys(keys) {
+                var seasonKey = [];
+                var matchKey = [];
+                for (let i = 0; i < keys.length; i++) {
+                    const board = keys[i];
+                    try {
+                        const requestSeason = await axios.get(host + `/rest/v4/board/${board.key}/schedule/?access_token=${ACCESS_TOKEN}`);
+                        seasonKey.push(requestSeason.data)
+                        if (requestSeason.data.data.seasons.length) {
+                            requestSeason.data.data.seasons.forEach(season => {
+                                matchKey.push(season.key)
+                            });
+                        }
+                    } catch (error) {
+                        console.log(error);
+
+                    }
+                }
+                // console.log(seasonKey);
+                // console.log(matchKey);
+
+                var data = [];
+                for (let i = 0; i < matchKey.length; i++) {
+                    const key = matchKey[i];
+                    try {
+                        const requestSeason = await axios.get(host + `/rest/v4/season/${key}/schedule/?access_token=${ACCESS_TOKEN}&month=2021-05`);
+                        data.push(requestSeason.data)
+
+                    } catch (error) {
+                        console.log(error);
+                    }
+                }
+                schedule(data)
+            }
+
+           seasonKeys(boardKeys, schedule)
+
+        }).catch(errors => {
+            console.log(errors);
+        })
+    })
+});
+
 
 
 
@@ -64,7 +183,7 @@ module.exports = {
                     if (err) throw err;
                     return res.status(200).json({
                         message: "auth_token updated successfully",
-                        response,data
+                        response, data
                     })
                 });
             }
@@ -122,7 +241,7 @@ module.exports = {
                             PlayerList: matchFullData.body.data
                         })
                     }
-                    
+
                     const pointCredit = matchFullData.body.data.fantasy_points;
                     const teamInfo = matchFullData.body.data.teams;
                     const playerInfo = matchFullData.body.data.players;
@@ -203,63 +322,20 @@ module.exports = {
         });
     },
     upcoming: (req, res) => {
-
-        Admin.findOne({ username: 'mpl' }, ['auth_token'], (err, data) => {
+        Match.findOne({month: moment().format('YYYY-MM')}, ['data'], (err, matchData)=>{
             if (err) throw err;
-            ACCESS_TOKEN = data.auth_token
 
-            var list = [];
-            options.url = host + `/rest/v2/schedule/?access_token=${ACCESS_TOKEN}`
-
-            request(options, function (error, response) {
-                if (error) throw new Error(error)
-                for (let index = moment().format('DD'); index <= moment().daysInMonth(); index++) {
-
-                    const notStartedMatch = response.body.data.months[0].days[index - 1].matches.filter(match => match.status === 'notstarted');
-
-                    notStartedMatch.forEach(match => {
-
-                        var sendMatch = {};
-                        sendMatch.key = match.key
-                        sendMatch.seriesName = match.season.name
-                        sendMatch.matchName = match.short_name
-                        sendMatch.team1_id = match.teams.a.match.season_team_key
-                        sendMatch.team1 = match.teams.a.key.toUpperCase();
-                        sendMatch.team2_id = match.teams.b.match.season_team_key
-                        sendMatch.team2 = match.teams.b.key.toUpperCase();
-                        // sendMatch.team1_logo = responseTwo.data.data.image_path
-                        // sendMatch.team2_logo = responesThree.data.data.image_path
-
-                        const matchStart = moment(match.start_date.iso)
-
-                        const days = matchStart.diff(moment(), 'days')
-                        const hours = matchStart.diff(moment(), 'hours') - (24 * (days));
-                        const minutes = (matchStart.diff(moment(), 'minutes') - (1440 * (days))) - (60 * hours);
-                        // console.log(days);
-                        // console.log(hours);
-                        // console.log(minutes);
-
-                        var time = "";
-                        if (days > 0) {
-                            time += `${days} Days ${hours} Hours`;
-                        } else {
-                            time += `${hours} Hours ${minutes} Minutes `;
-                        }
-
-                        // console.log(time);
-                        sendMatch.remaingTime = time
-                        sendMatch.doNotUse = match.start_date.iso
-
-                        list.push(sendMatch)
-                    });
-                }
-
-                return res.status(200).json({
-                    success: true,
-                    message: "Upcoming Match data Available",
-                    list: list
-                })
+            const list = matchData.data.sort((a, b) => {
+                return moment(a.doNotUse).diff(b.doNotUse);
+              });
+            return res.status(200).json({
+                success: true,
+                message: "Upcoming Match data Available",
+                list
             })
-        });
+        })
     },
+    upcome: (req, res) => {
+        
+    }
 }
