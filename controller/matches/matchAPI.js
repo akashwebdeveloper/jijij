@@ -116,13 +116,13 @@ schedule.scheduleJob('5 0 1 * *', function () {
 
             // New month upcoming match Save in to database
             match.save().then(match => {
-               console.log('New month upcoming match Save in to database')
+                console.log('New month upcoming match Save in to database')
             }).catch(err => {
                 console.log(err)
             })
             return list;
         }
-        
+
         axios.get(host + `/rest/v4/coverage/?access_token=${ACCESS_TOKEN}`).then(responses => {
 
             const boardKeys = responses.data.data.boards
@@ -162,7 +162,7 @@ schedule.scheduleJob('5 0 1 * *', function () {
                 schedule(data)
             }
 
-           seasonKeys(boardKeys, schedule)
+            seasonKeys(boardKeys, schedule)
 
         }).catch(errors => {
             console.log(errors);
@@ -322,12 +322,33 @@ module.exports = {
         });
     },
     upcoming: (req, res) => {
-        Match.findOne({month: moment().format('YYYY-MM')}, ['data'], (err, matchData)=>{
+        Match.findOne({ month: moment().format('YYYY-MM') }, ['data'], (err, matchData) => {
             if (err) throw err;
 
+
+            matchData.data.forEach((eachMatch, index) => {
+                const matchStart = moment(eachMatch.startingTime)
+
+                const days = matchStart.diff(moment(), 'days')
+                const hours = matchStart.diff(moment(), 'hours') - (24 * (days));
+                const minutes = (matchStart.diff(moment(), 'minutes') - (1440 * (days))) - (60 * hours);
+                // console.log(days);
+                // console.log(hours);
+                // console.log(minutes);
+
+                var time = "";
+                if (days > 0) {
+                    time += `${days} Days ${hours} Hours`;
+                } else {
+                    time += `${hours} Hours ${minutes} Minutes `;
+                }
+
+                matchData.data[index].remaingTime = time
+            });
+
             const list = matchData.data.sort((a, b) => {
-                return moment(a.doNotUse).diff(b.doNotUse);
-              });
+                return moment(a.startingTime).diff(b.startingTime);
+            });
             return res.status(200).json({
                 success: true,
                 message: "Upcoming Match data Available",
@@ -336,6 +357,102 @@ module.exports = {
         })
     },
     upcome: (req, res) => {
-        
+        Admin.findOne({ username: 'mpl' }, ['auth_token'], (err, data) => {
+            if (err) throw err;
+            ACCESS_TOKEN = data.auth_token
+
+
+            var list = [];
+
+            async function schedule(apiData) {
+                for (let index = moment().format('DD'); index <= moment().daysInMonth(); index++) {
+
+                    apiData.forEach(eachData => {
+
+                        const currentMonth = eachData.data.months.filter(month => month.current_month === true);
+
+                        if (currentMonth[0].days[index - 1].matches.length) {
+
+                            const notStartedMatch = eachData.data.months[0].days[index - 1].matches.filter(match => match.status === 'notstarted');
+                            notStartedMatch.forEach(match => {
+
+                                var sendMatch = {};
+                                sendMatch.key = match.key
+                                sendMatch.seriesName = match.season.name
+                                sendMatch.matchName = match.short_name
+                                sendMatch.team1_id = match.teams.a.match.season_team_key
+                                sendMatch.team1 = match.teams.a.short_name;
+                                sendMatch.team1_logo = ''
+                                sendMatch.team2_id = match.teams.b.match.season_team_key
+                                sendMatch.team2 = match.teams.b.short_name;
+                                sendMatch.team2_logo = ''
+                                sendMatch.startingTime = match.start_date.iso
+                                sendMatch.remaingTime = ''
+
+                                list.push(sendMatch)
+                            });
+                        }
+                    });
+                }
+
+                const match = new Match({
+                    month: moment().format('YYYY-MM'),
+                    data: list
+                })
+
+                // New month upcoming match Save in to database
+                match.save().then(match => {
+                    console.log('New month upcoming match Save in to database')
+                }).catch(err => {
+                    console.log(err)
+                })
+                return res.json(list);
+            }
+
+            axios.get(host + `/rest/v4/coverage/?access_token=${ACCESS_TOKEN}`).then(responses => {
+
+                const boardKeys = responses.data.data.boards
+
+                async function seasonKeys(keys) {
+                    var seasonKey = [];
+                    var matchKey = [];
+                    for (let i = 0; i < keys.length; i++) {
+                        const board = keys[i];
+                        try {
+                            const requestSeason = await axios.get(host + `/rest/v4/board/${board.key}/schedule/?access_token=${ACCESS_TOKEN}`);
+                            seasonKey.push(requestSeason.data)
+                            if (requestSeason.data.data.seasons.length) {
+                                requestSeason.data.data.seasons.forEach(season => {
+                                    matchKey.push(season.key)
+                                });
+                            }
+                        } catch (error) {
+                            console.log(error);
+
+                        }
+                    }
+                    // console.log(seasonKey);
+                    // console.log(matchKey);
+
+                    var data = [];
+                    for (let i = 0; i < matchKey.length; i++) {
+                        const key = matchKey[i];
+                        try {
+                            const requestSeason = await axios.get(host + `/rest/v4/season/${key}/schedule/?access_token=${ACCESS_TOKEN}&month=2021-05`);
+                            data.push(requestSeason.data)
+
+                        } catch (error) {
+                            console.log(error);
+                        }
+                    }
+                    schedule(data)
+                }
+
+                seasonKeys(boardKeys, schedule)
+
+            }).catch(errors => {
+                console.log(errors);
+            })
+        })
     }
 }
