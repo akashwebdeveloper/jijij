@@ -308,6 +308,7 @@ module.exports = {
             if (err) throw err;
             var upcomingMatch = matchData.data.filter(eachMatch => moment(eachMatch.startingTime) >= moment());
 
+
             upcomingMatch.forEach((eachMatch, index) => {
                 const matchStart = moment(eachMatch.startingTime)
 
@@ -325,6 +326,27 @@ module.exports = {
                     time += `${hours} Hours ${minutes} Minutes `;
                 }
 
+                // checking that lineups out or not
+                if (hours === 0 && minutes < 45 && eachMatch.lineups_out === false) {
+                    Admin.findOne({ username: 'mpl' }, ['auth_token'],async (err, data) => {
+                        if (err) throw err;
+                        ACCESS_TOKEN = data.auth_token
+
+                        try {
+                            const matchDatas = await axios.get(host + `/rest/v4/match/${eachMatch.key}/?access_token=${ACCESS_TOKEN}&card_type=metric_101`);
+                            console.log(matchDatas.data.data.card.teams.a.match.playing_xi.length);
+
+                            if (matchDatas.data.data.card.teams.a.match.playing_xi.length) {
+                                Match.updateOne({ month: moment().format('YYYY-MM'), "data.key": eachMatch.key }, {$set : {"data.$.lineups_out" : true}}, (err, result)=>{
+                                    if (err) throw err;
+                                    console.log('yes lineups out');
+                                })
+                            }
+                        } catch (error) {
+                            console.log(error);
+                        }
+                    })
+                }
                 upcomingMatch[index].remaingTime = time
             });
 
