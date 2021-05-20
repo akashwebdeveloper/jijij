@@ -179,10 +179,11 @@ module.exports = {
             ACCESS_TOKEN = data.auth_token
 
             // * This API for getting time of match start
-            options.url = host + `/rest/v2/match/${match_key}/?access_token=${ACCESS_TOKEN}&card_type=summary_card`
+            options.url = host + `/rest/v4/match/${match_key}/?access_token=${ACCESS_TOKEN}&card_type=metric_101`
 
             request(options, function (error, response) {
                 if (error) throw new Error(error)
+                
                 const teamCards = response.body.data.card;
 
                 var time = "",
