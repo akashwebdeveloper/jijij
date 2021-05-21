@@ -178,13 +178,10 @@ module.exports = {
             if (err) throw err;
             ACCESS_TOKEN = data.auth_token
 
-            // * This API for getting time of match start
-            options.url = host + `/rest/v4/match/${match_key}/?access_token=${ACCESS_TOKEN}&card_type=metric_101`
+            Match.findOne({ month: moment().format('YYYY-MM'), "data.key": match_key }, ['data.$', 'playing_11'], (err, result) => {
+                if (err) throw err;
 
-            request(options, function (error, response) {
-                if (error) throw new Error(error)
-                
-                const teamCards = response.body.data.card;
+                const isPlaying_11 = result.playing_11.filter(matches => matches.key === match_key);
 
                 var time = "",
                     // ? creating model for Squad List
@@ -196,13 +193,13 @@ module.exports = {
                     },
                     players = []
 
-                const matchStart = moment(teamCards.start_date.iso)
+                const matchStart = moment(result.data[0].startingTime)
                 const days = matchStart.diff(moment(), 'days')
                 const hours = matchStart.diff(moment(), 'hours') - (24 * (days));
                 const minutes = (matchStart.diff(moment(), 'minutes') - (1440 * (days))) - (60 * hours);
-                // console.log(days);
-                // console.log(hours);
-                // console.log(minutes);
+                // ! console.log(days);
+                // ! console.log(hours);
+                // ! console.log(minutes);
 
                 // ? Remaining time to Start Match
                 if (days > 0) {
@@ -213,17 +210,44 @@ module.exports = {
 
                 // * This API for getting All details Player name, player point, player credit
                 options.url = host + `/rest/v3/fantasy-match-credits/${match_key}/?access_token=${ACCESS_TOKEN}`
-                request(options, function (error, matchFullData) {
+                request(options, async function (error, matchFullData) {
 
                     if (error) throw new Error(error)
                     if (matchFullData.body.data == null) {
-                        return res.status(200).json({
+                        return res.status(400).json({
                             success: false,
                             message: matchFullData.body.status_msg,
                             remaining: null,
                             PlayerList: matchFullData.body.data
                         })
                     }
+                    // ! console.log(result.data[0].lineups_out);
+
+                    var bothPlaying_11 = {};
+                    if (hours <= 0 && minutes < 45 && result.data[0].lineups_out === false) {
+                        try {
+                            const matchDatas = await axios.get(host + `/rest/v4/match/${match_key}/?access_token=${ACCESS_TOKEN}&card_type=metric_101`);
+                            bothPlaying_11 = matchDatas.data.data.card.teams
+                            if (matchDatas.data.data.card.teams.a.match.playing_xi.length) {
+                                var pushObj = {
+                                    key: match_key,
+                                    playing: {
+                                        a: { match: { playing_xi: bothPlaying_11.a.match.playing_xi } },
+                                        b: { match: { playing_xi: bothPlaying_11.b.match.playing_xi } }
+                                    }
+                                }
+                                Match.updateOne({ month: moment().format('YYYY-MM'), "data.key": match_key }, { $set: { "data.$.lineups_out": true }, $push: { playing_11: pushObj } }, (err, result) => {
+                                    if (err) throw err;
+                                    console.log('yes lineups out');
+                                })
+                            }
+                        } catch (error) {
+                            console.log(error);
+                        }
+                    } else if (result.data[0].lineups_out === true) {
+                        bothPlaying_11 = isPlaying_11[0].playing
+                    }
+                    // ! console.log(bothPlaying_11);
 
                     const pointCredit = matchFullData.body.data.fantasy_points;
                     const teamInfo = matchFullData.body.data.teams;
@@ -235,8 +259,9 @@ module.exports = {
                             let eachPlayer = playerInfo[playerData.player]
                             let eachPlayerRole = playerInfo[playerData.player].seasonal_role
 
-                            var pushObj = {};
-                            var pushTeamObj = {};
+                            var pushObj = {},
+                                pushTeamObj = {},
+                                playing = false;
                             pushTeamObj.playerId = playerData.player
                             pushTeamObj.playerName = eachPlayer.name
                             pushTeamObj.picFileName = false
@@ -250,6 +275,11 @@ module.exports = {
                                 pushObj.point = playerData.season_points
                                 pushObj.credit = playerData.credit_value
 
+                                if (bothPlaying_11[eachPlayer.team_key]) {
+                                    bothPlaying_11[eachPlayer.team_key].match.playing_xi.length ? playing = bothPlaying_11[eachPlayer.team_key].match.playing_xi.some(player_id => player_id === playerData.player) : playing = false
+                                }
+                                pushObj.playing = playing
+
                                 // ? pushing keeper into wk
                                 PlayerList.wk.push(pushObj)
                             } else if (eachPlayerRole === "batsman") {
@@ -260,6 +290,10 @@ module.exports = {
                                 pushObj.point = playerData.season_points
                                 pushObj.credit = playerData.credit_value
 
+                                if (bothPlaying_11[eachPlayer.team_key]) {
+                                    bothPlaying_11[eachPlayer.team_key].match.playing_xi.length ? playing = bothPlaying_11[eachPlayer.team_key].match.playing_xi.some(player_id => player_id === playerData.player) : playing = false
+                                }
+                                pushObj.playing = playing
                                 // ? pushing batsman into bat
                                 PlayerList.bat.push(pushObj)
                             } else if (eachPlayerRole === "allrounder") {
@@ -270,6 +304,10 @@ module.exports = {
                                 pushObj.point = playerData.season_points
                                 pushObj.credit = playerData.credit_value
 
+                                if (bothPlaying_11[eachPlayer.team_key]) {
+                                    bothPlaying_11[eachPlayer.team_key].match.playing_xi.length ? playing = bothPlaying_11[eachPlayer.team_key].match.playing_xi.some(player_id => player_id === playerData.player) : playing = false
+                                }
+                                pushObj.playing = playing
                                 // ? pushing allrounder into ar
                                 PlayerList.ar.push(pushObj)
                             } else {
@@ -280,6 +318,10 @@ module.exports = {
                                 pushObj.point = playerData.season_points
                                 pushObj.credit = playerData.credit_value
 
+                                if (bothPlaying_11[eachPlayer.team_key]) {
+                                    bothPlaying_11[eachPlayer.team_key].match.playing_xi.length ? playing = bothPlaying_11[eachPlayer.team_key].match.playing_xi.some(player_id => player_id === playerData.player) : playing = false
+                                }
+                                pushObj.playing = playing
                                 // ? pushing bowler into bowl
                                 PlayerList.bowl.push(pushObj)
                             }
@@ -292,6 +334,15 @@ module.exports = {
 
                     Admin.updateOne({ username: 'mpl' }, { $push: { players: newPlayers } }, (err) => {
                         if (err) throw err;
+
+                        if (moment(result.data[0].startingTime) < moment()) {
+                            return res.status(400).json({
+                                success: false,
+                                message: 'match has been started',
+                                remaining: 0,
+                                PlayerList: PlayerList
+                            })
+                        }
 
                         return res.status(200).json({
                             success: true,
@@ -329,16 +380,22 @@ module.exports = {
 
                 // checking that lineups out or not
                 if (hours === 0 && minutes < 45 && eachMatch.lineups_out === false) {
-                    Admin.findOne({ username: 'mpl' }, ['auth_token'],async (err, data) => {
+                    Admin.findOne({ username: 'mpl' }, ['auth_token'], async (err, data) => {
                         if (err) throw err;
                         ACCESS_TOKEN = data.auth_token
 
                         try {
                             const matchDatas = await axios.get(host + `/rest/v4/match/${eachMatch.key}/?access_token=${ACCESS_TOKEN}&card_type=metric_101`);
-                            console.log(matchDatas.data.data.card.teams.a.match.playing_xi.length);
 
                             if (matchDatas.data.data.card.teams.a.match.playing_xi.length) {
-                                Match.updateOne({ month: moment().format('YYYY-MM'), "data.key": eachMatch.key }, {$set : {"data.$.lineups_out" : true}}, (err, result)=>{
+                                var pushObj = {
+                                    key: match_key,
+                                    playing: {
+                                        a: { match: { playing_xi: bothPlaying_11.a.match.playing_xi } },
+                                        b: { match: { playing_xi: bothPlaying_11.b.match.playing_xi } }
+                                    }
+                                }
+                                Match.updateOne({ month: moment().format('YYYY-MM'), "data.key": eachMatch.key }, { $set: { "data.$.lineups_out": true }, $push: { playing_11: pushObj } }, (err, result) => {
                                     if (err) throw err;
                                     console.log('yes lineups out');
                                 })
