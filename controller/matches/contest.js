@@ -1,18 +1,43 @@
 require('dotenv').config()
+const moment = require('moment');
 const Contest = require('../../models/contest')
 const User = require('../../models/user')
 const Admin = require('../../models/admin')
 const Subcontest = require('../../models//sub_contest')
+const Match = require('../../models/match')
 const { v4: uuidv4 } = require('uuid');
 var mongoose = require('mongoose');
+const base_url = process.env.BASE_URL
+
+
+
+
+function convertToRemainingTime(starting_time) {
+    const matchStart = moment(starting_time)
+
+    const days = matchStart.diff(moment(), 'days')
+    const hours = matchStart.diff(moment(), 'hours') - (24 * (days));
+    const minutes = (matchStart.diff(moment(), 'minutes') - (1440 * (days))) - (60 * hours);
+    // console.log(days);
+    // console.log(hours);
+    // console.log(minutes);
+
+    var time = "";
+    if (days > 0) {
+        time += `${days} Days ${hours} Hours`;
+    } else {
+        time += `${hours} Hours ${minutes} Minutes `;
+    }
+    return time;
+}
 
 module.exports = {
     openContestList: (req, res) => {
         const { user_id, match_key } = req.body
-        var contestList = [];
 
         // Function for making contest list by using contest and sub contest model
-        function contestListMaking(contest, subcontest, created_team) {
+        function contestListMaking(contest, subcontest, created_team, joined_contest) {
+            var contestList = [];
             contest.forEach(cont => {
                 subcontest.forEach(subcont => {
                     if (String(cont._id) === String(subcont.contestId)) {
@@ -35,7 +60,8 @@ module.exports = {
                 success: true,
                 message: "Upcoming Match Contest Available",
                 list: contestList,
-                created_team
+                created_team,
+                joined_contest
             })
         }
 
@@ -46,56 +72,59 @@ module.exports = {
                 if (err) throw err;
                 User.findOne({ _id: user_id, "created_teams.match_key": match_key }, ['created_teams'], (err, user) => {
                     if (err) throw err;
+                    Subcontest.find({ $and: [{ matchKey: match_key }, { "joined_user_team.User": user_id }] }, (err, joinedcontest) => {
+                        if (err) throw err;
 
-                    // * Checking  that how much team creted by user for current much
-                    var created_team = 0;
-                    if (user) {
-                        user.created_teams.forEach(match => {
-                            if (match.match_key === match_key) {
-                                created_team = match.data.length
-                            }
-                        });
-                    }
-
-                    var insertArray = [];
-                    var newContests = contest.filter(entry1 => !subcon.some(entry2 => String(entry1._id) === String(entry2.contestId)));
-
-                    // Checking that this is first time userchecking contact list for this match
-                    if (!subcon.length) {
-                        contest.forEach(con => {
-                            var pushObj = {
-                                contestId: con._id,
-                                matchKey: match_key
-                            };
-                            insertArray.push(pushObj);
-                        });
-
-                        Subcontest.insertMany(insertArray)
-                            .then(function (subcontest) {
-                                contestListMaking(contest, subcontest, created_team)
-                            })
-                            .catch(function (err) {
-                                return res.status(500).send(err);
+                        // * Checking  that how much team creted by user for current much
+                        var created_team = 0;
+                        if (user) {
+                            user.created_teams.forEach(match => {
+                                if (match.match_key === match_key) {
+                                    created_team = match.data.length
+                                }
                             });
-                    } else if (newContests.length) {
+                        }
+
                         var insertArray = [];
-                        newContests.forEach(con => {
-                            var pushObj = {
-                                contestId: con._id,
-                                matchKey: match_key,
-                            };
-                            insertArray.push(pushObj);
-                        });
-                        Subcontest.insertMany(insertArray)
-                            .then(
-                                contestListMaking(contest, subcon, created_team)
-                            )
-                            .catch(function (err) {
-                                return res.status(500).send(err);
+                        var newContests = contest.filter(entry1 => !subcon.some(entry2 => String(entry1._id) === String(entry2.contestId)));
+
+                        // Checking that this is first time userchecking contact list for this match
+                        if (!subcon.length) {
+                            contest.forEach(con => {
+                                var pushObj = {
+                                    contestId: con._id,
+                                    matchKey: match_key
+                                };
+                                insertArray.push(pushObj);
                             });
-                    } else {
-                        contestListMaking(contest, subcon, created_team)
-                    }
+
+                            Subcontest.insertMany(insertArray)
+                                .then(function (subcontest) {
+                                    contestListMaking(contest, subcontest, created_team, joinedcontest.length)
+                                })
+                                .catch(function (err) {
+                                    return res.status(500).send(err);
+                                });
+                        } else if (newContests.length) {
+                            var insertArray = [];
+                            newContests.forEach(con => {
+                                var pushObj = {
+                                    contestId: con._id,
+                                    matchKey: match_key,
+                                };
+                                insertArray.push(pushObj);
+                            });
+                            Subcontest.insertMany(insertArray)
+                                .then(
+                                    contestListMaking(contest, subcon, created_team, joinedcontest.length)
+                                )
+                                .catch(function (err) {
+                                    return res.status(500).send(err);
+                                });
+                        } else {
+                            contestListMaking(contest, subcon, created_team, joinedcontest.length)
+                        }
+                    })
                 })
             })
         })
@@ -533,7 +562,7 @@ module.exports = {
                     data.forEach(user => {
                         objIndex = usersList.findIndex((obj => obj.user === String(user._id)));
                         usersList[objIndex].username = user.userName
-                        usersList[objIndex].photo = user.photos
+                        usersList[objIndex].photo = `${base_url}/images/users/${user.photos}`
                     });
 
 
@@ -558,6 +587,123 @@ module.exports = {
                         }
                     })
                 })
+            })
+        })
+    },
+    joinedContest: (req, res) => {
+        const { user_id, match_key } = req.body
+
+        Subcontest.find({ matchKey: match_key, "joined_user_team.User": user_id }, (err, subcontests) => {
+            if (err) throw err;
+
+            var contestIdList = [];
+            subcontests.forEach(contest => {
+                contestIdList.push(contest.contestId);
+            });
+
+            let uniqueContestList = [...new Set(contestIdList)];
+            if (!uniqueContestList) {
+                return res.status(400).json({
+                    success: false,
+                    message: `User did't Joined any contest till now`,
+                    list: []
+                })
+            }
+
+
+            Contest.find({ _id: { $in: uniqueContestList } }, (err, contests) => {
+                if (err) throw err;
+
+                var contestList = [];
+                subcontests.forEach(subcontest => {
+                    contests.forEach(contest => {
+                        if (String(subcontest.contestId) === String(contest._id)) {
+
+                            var pushObj = {
+                                contestId: subcontest._id,
+                                match_key: match_key,
+                                prizePool: contest.prizePool,
+                                spot: contest.spot,
+                                spotLeft: (contest.spot - subcontest.joined_user_team.length),
+                                winner: contest.winner,
+                                entryFee: contest.entryFee,
+                                entryLimit: contest.entryLimit,
+                            };
+                            contestList.push(pushObj)
+                        }
+                    });
+                });
+
+
+                return res.status(200).json({
+                    success: true,
+                    message: "joined Contest By User",
+                    list: contestList,
+                    joinedContest: contestList.length
+                })
+
+            })
+        })
+    },
+    joinedMatches: (req, res) => {
+        const { user_id } = req.body
+
+        Subcontest.find({ "joined_user_team.User": user_id }, (err, subcontests) => {
+            if (err) throw err;
+
+            var match_key_list = [];
+            subcontests.forEach(subcontest => {
+                match_key_list.push(subcontest.matchKey)
+            });
+
+            let uniqueMatchKeyList = [...new Set(match_key_list)];
+            var joinedMatches = {
+                upcoming: [],
+                live: [],
+                result: []
+            };
+
+            if (!uniqueMatchKeyList) {
+                return res.status(400).json({
+                    success: false,
+                    message: `User did't Joined any match till now`,
+                    list: joinedMatches
+                })
+            }
+
+
+            Match.find({}, ['data'], async (err, matchData) => {
+                if (err) throw err;
+
+                await matchData.forEach(async eachmonth => {
+                    let result = await eachmonth.data.filter(o1 => uniqueMatchKeyList.some(o2 => o1.key === o2));
+
+                    let joinedContest;
+                    result.forEach(joinedmatch => {
+                        if (joinedmatch.status === 'not started') {
+                            joinedContest = match_key_list.filter(joinedcont => joinedcont === joinedmatch.key);
+                            joinedmatch.remaingTime = convertToRemainingTime(joinedmatch.startingTime)
+                            joinedmatch.joinedContest = joinedContest.length
+                            joinedMatches.upcoming.push(joinedmatch)
+                        } else if (joinedmatch.status === 'completed') {
+                            joinedmatch.remaingTime = moment(joinedmatch.startingTime).format('MMM, D')
+                            joinedContest = match_key_list.filter(joinedcont => joinedcont === joinedmatch.key);
+                            joinedmatch.joinedContest = joinedContest.length
+                            joinedMatches.result.push(joinedmatch)
+                        } else {
+                            joinedmatch.remaingTime = moment(joinedmatch.startingTime).format('MMM, D')
+                            joinedContest = match_key_list.filter(joinedcont => joinedcont === joinedmatch.key);
+                            joinedmatch.joinedContest = joinedContest.length
+                            joinedMatches.live.push(joinedmatch)
+                        }
+                    });
+
+                    return res.status(200).json({
+                        success: true,
+                        message: "completed Matches By User",
+                        list: joinedMatches,
+                    })
+                });
             })
         })
     }

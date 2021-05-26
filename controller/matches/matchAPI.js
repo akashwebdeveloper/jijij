@@ -213,7 +213,18 @@ module.exports = {
                 request(options, async function (error, matchFullData) {
 
                     if (error) throw new Error(error)
-                    if (matchFullData.body.data == null) {
+                    if (matchFullData.body.data == null && matchFullData.body.status_code === 403) {
+                        request(authToken, function (error, response) {
+                            if (error) throw new Error(error)
+                            // console.log(response.body)
+                            if (response.body.status_code === 200) {
+                                Admin.updateOne({ username: 'mpl' }, { $set: { auth_token: response.body.auth.access_token } }, (err, data) => {
+                                    if (err) throw err;
+                                    console.log('auth_token updated successfully');
+                                });
+                            }
+                        })
+                        
                         return res.status(400).json({
                             success: false,
                             message: matchFullData.body.status_msg,
