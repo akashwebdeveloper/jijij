@@ -14,7 +14,6 @@ function init(passport) {
 
         bcrypt.compare(password, user.password).then(match => {
             if(match) {
-                
                 return done(null, user, { message: 'Logged in succesfully' })
             }
             return done(null, false, { message: 'Wrong username or password' })

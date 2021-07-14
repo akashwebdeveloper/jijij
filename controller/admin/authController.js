@@ -18,8 +18,8 @@ module.exports = {
         if (!email || !password) {
             req.flash('error', 'All fields are required')
             return res.redirect('/admin/login')
-            
         }
+        
         passport.authenticate('local', (err, user, info) => {
             
             

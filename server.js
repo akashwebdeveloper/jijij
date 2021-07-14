@@ -1,3 +1,4 @@
+// This is Server file
 require('dotenv').config();
 const express = require('express');
 const bodyparser = require('body-parser');
@@ -56,7 +57,7 @@ app.use((req, res, next) => {
     next()
 })
 
-// // Assets
+// Assets
 app.use('/profilephoto', express.static('profilephoto'));
 // app.use('/bazarphoto', express.static('bazarphoto'));
 app.use(express.static('public'));

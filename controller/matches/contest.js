@@ -602,7 +602,7 @@ module.exports = {
             });
 
             let uniqueContestList = [...new Set(contestIdList)];
-            if (!uniqueContestList) {
+            if (!uniqueContestList.length) {
                 return res.status(400).json({
                     success: false,
                     message: `User did't Joined any contest till now`,
